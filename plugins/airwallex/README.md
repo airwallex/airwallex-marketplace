@@ -14,14 +14,13 @@ Teaches Claude Code and Cursor how to use the **`airwallex`** CLI — an agent-o
 
 ### Skill file structure
 
-Each workflow skill is self-contained in `SKILL.md` (workflow, examples, gotchas) plus a `references/cli_schema/` directory with auto-extracted CLI parameter schemas. The best-practices skill additionally carries `api_traps.md` and the full set of CLI schemas across all command groups:
+Each workflow skill is self-contained in a single `SKILL.md` (workflow, examples, gotchas). The best-practices skill additionally carries `api_traps.md` with common API pitfalls and workarounds:
 
 ```
 skills/awx-best-practices/
 ├── SKILL.md                # Domain routing table, auth rules
 └── references/
-    ├── api_traps.md        # Common API pitfalls and workarounds
-    └── cli_schema/         # All command groups (38 schema files)
+    └── api_traps.md        # Common API pitfalls and workarounds
 ```
 
 ## Plugin structure
@@ -33,22 +32,17 @@ airwallex/
 ├── README.md
 └── skills/
     ├── contract-to-billing/
-    │   ├── SKILL.md
-    │   └── references/cli_schema/
+    │   └── SKILL.md
     ├── beneficiary-creation/
-    │   ├── SKILL.md
-    │   └── references/cli_schema/
+    │   └── SKILL.md
     ├── card-provisioning/
-    │   ├── SKILL.md
-    │   └── references/cli_schema/
+    │   └── SKILL.md
     ├── manage-cashflow/
-    │   ├── SKILL.md
-    │   └── references/cli_schema/
+    │   └── SKILL.md
     └── awx-best-practices/
         ├── SKILL.md
         └── references/
-            ├── api_traps.md
-            └── cli_schema/
+            └── api_traps.md
 ```
 
 ## Recommended models
@@ -57,6 +51,4 @@ These skills involve multi-step financial workflows with document extraction and
 
 ## Prerequisites
 
-- Python >= 3.11
-- [uv](https://docs.astral.sh/uv/) package manager
 - `airwallex` CLI installed and authenticated
