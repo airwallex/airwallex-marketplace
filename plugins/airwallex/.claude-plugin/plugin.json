@@ -1,7 +1,7 @@
 {
   "name": "airwallex",
   "description": "Airwallex agent skills for Claude \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Airwallex",
     "url": "https://www.airwallex.com"
