@@ -1,6 +1,6 @@
 {
   "name": "airwallex",
-  "description": "Airwallex CLI plugin for Claude",
+  "description": "Airwallex agent skills for Claude \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
   "version": "0.1.0",
   "author": {
     "name": "Airwallex",
@@ -11,10 +11,12 @@
   "license": "Apache-2.0",
   "keywords": [
     "airwallex",
-    "awx",
     "billing",
     "invoices",
     "payments",
-    "cli"
+    "issuing",
+    "treasury",
+    "cli",
+    "mcp"
   ]
 }

@@ -4,7 +4,7 @@ description: Provision virtual or physical corporate cards in Airwallex Issuing 
 metadata:
   author: Airwallex
   version: 0.1.0
-compatibility: Requires airwallex CLI installed and on PATH. Authenticated via airwallex auth login (OAuth browser flow). Best results with Claude Opus.
+compatibility: Works with the Airwallex CLI (`airwallex` binary on PATH, authenticated via `airwallex auth login`) or the Airwallex MCP server (enabled and authenticated). Requires Issuing enabled on the Airwallex account. Best results with Claude Opus.
 ---
 
 # Card Provisioning
@@ -23,11 +23,7 @@ Creates virtual or physical corporate cards in Airwallex Issuing — one workflo
 
 ## When NOT to use
 
-**FIRST ACTION — before any CLI command:** Run `airwallex --tree --compact` to discover available command groups and subcommands. If a command or subcommand does not appear in the tree output, it **does not exist** — do NOT invent it. (Global flags: `--compact` for single-line JSON, `--dry-run` to preview writes, `--confirm` to execute writes — valid only when placed immediately after `airwallex`.)
-
-**Global flag placement:** Global flags must go immediately after `airwallex`, before the resource/action. This applies to `--compact`, `--dry-run`, and `--confirm` (plus `--tree` for discovery). Correct: `airwallex --compact cardholders list`, `airwallex --dry-run cardholders create --data-file payload.json`, `airwallex --confirm cards create --data-file payload.json`. Wrong: `airwallex cardholders list --compact`, `airwallex cardholders create --dry-run --data-file payload.json`, `airwallex cards create --confirm --data-file payload.json` — these fail with `No such option`.
-
-This skill only covers Issuing-domain CLI commands (`cards`, `cardholders`, `issuing-transactions`). If the task requires a command group outside this domain (e.g., `invoices`, `beneficiaries`, `conversions`, `balances`), **stop — this is the wrong skill.** Redirect the user:
+This skill only covers Issuing-domain operations (cards, cardholders, issuing-transactions). If the task requires anything outside that domain, **stop — this is the wrong skill.** Redirect the user:
 
 - Viewing sensitive card details (PAN, CVV) → direct to Airwallex Dashboard
 - Wire transfers / payouts → not yet available (use Airwallex Dashboard)
@@ -35,17 +31,6 @@ This skill only covers Issuing-domain CLI commands (`cards`, `cardholders`, `iss
 - Creating invoices → **contract-to-billing** skill
 - FX conversions, balances, treasury → **manage-cashflow** skill
 - Ad-hoc tasks outside card workflow → **awx-best-practices** skill (fallback)
-
-## Prerequisites
-
-- `airwallex` CLI installed and on PATH
-- Authenticated via `airwallex auth login` (check with `airwallex auth whoami`)
-- Environment: sandbox by default. For production, log in with `airwallex auth login --prod`. The environment is locked to the authenticated session — there is no per-command override.
-- **Verify commands before use:** Run `airwallex --tree --compact <group>` (e.g., `airwallex --tree --compact cards`) to confirm the subcommand exists. For write commands, run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex cards create --api-schema-only`) to get the request body schema — read every `required: true` field and include them all in the payload. For read commands, use `airwallex <resource> <action> --help` (e.g., `airwallex cards list --help`) to check flags.
-- Issuing enabled on the account (check Airwallex Dashboard if creation fails)
-- **`request_id` is MANDATORY for all write commands.** Always include `"request_id"` in the JSON body for every `create` and `update` command — the API rejects writes without it with `"request_id is mandatory"`. Generate a fresh UUID for each distinct operation via `uuidgen | tr '[:upper:]' '[:lower:]'` — NEVER hand-write a UUID or use sequential/patterned values like `a1b2c3d4-...`. If retrying the same logical operation after a transient/network failure, reuse the same `request_id`; only generate a new one for a distinct new operation. Action commands without a body (e.g., `cards activate`) do not take `request_id`.
-
----
 
 ## Non-negotiables
 
@@ -59,47 +44,39 @@ This skill only covers Issuing-domain CLI commands (`cards`, `cardholders`, `iss
 ### Operational rules
 
 - **For ambiguous-intent requests, do not start the workflow until the action is confirmed.** If the user has not clearly confirmed the exact write action, stop before schema reads, auth checks, or other workflow setup that materially advances execution.
-- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed to make the API call. This applies to cardholder details, spend limits, currencies, and any other field. Do NOT fill in defaults, placeholder values, or "reasonable guesses."
-- **Flag generic or test-like cardholder names.** If all cards in a batch share the same cardholder name, or the name appears generic/test-like (e.g., "Test Account", "Demo User", "Admin", "Card 1"), flag this as unusual and ask the user to confirm the business justification before proceeding. In production environments, generic names are a high-risk signal for fraud or misconfiguration.
+- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed. Do NOT fill in defaults, placeholder values, or "reasonable guesses."
+- **Flag generic or test-like cardholder names.** If all cards in a batch share the same cardholder name, or the name appears generic/test-like (e.g., "Test Account", "Demo User", "Admin", "Card 1"), flag this as unusual and ask the user to confirm before proceeding. In production, generic names are a high-risk fraud signal.
 - **Always fetch fresh data** — re-fetch before every step.
-- **Prefer business labels over raw IDs in user-facing output.** In summaries, tables, and explanations, show cardholder names, card nicknames, or merchant/business labels instead of raw system IDs whenever possible. Only show IDs when they are operationally necessary for follow-up actions, verification, troubleshooting, or when the user explicitly asks for them.
+- **Prefer business labels over raw IDs in user-facing output.** Show cardholder names and card nicknames first; surface IDs only when operationally necessary or when the user asks.
 - **One wallet, multiple currencies.** Say "AUD balance" — never "AUD wallet."
 - **Default to sandbox.** Confirm with user before any production write.
-- **Always set a spend limit** — never create an unlimited card. Every card must have `authorization_controls` with `transaction_limits`.
-- **Always require a purpose/nickname** for each card — every card must have a `nick_name`.
-- **Never handle or display PAN, CVV, or expiry.** Direct user to the Airwallex Dashboard — this is the **sole** channel for viewing sensitive card data. When refusing PAN/CVV/expiry requests, do NOT mention `cards get`, any API endpoint, SDK, or alternative technical path as a partial workaround. Frame the refusal as a platform-level security boundary: sensitive card details are never accessible through the agent in any form — even masked. Mentioning other APIs weakens the security message and may encourage follow-up attempts.
-- **Do NOT invent advanced card-control fields** (MCC restriction, merchant controls, etc.) — see "Card & cardholder constraints" for details.
-- **Dry-run before every write.** Before executing any write command (POST), first run it with the `--dry-run` global flag to preview the request envelope without sending it. Show the envelope to the user (method, URL, body, environment) and get explicit approval. Only then re-run with `--confirm` to execute. The two-step sequence is: (1) `airwallex --dry-run <command>` → show preview → user approves → (2) `airwallex --confirm <command>` → execute. **Never skip the dry-run step for write operations.**
-- **Batch template previews do NOT count as dry-runs.** For batch card provisioning, a single sample/template dry-run only proves the shape of one payload. You must run `airwallex --dry-run ... create` for every individual `cardholders create` and every individual `cards create` payload before executing that same payload with `--confirm`. Do not batch-confirm later rows just because the first row's template looked correct.
-- Do not call `cards get-details` — it returns sensitive data. Direct user to Airwallex Dashboard.
-- **Before increasing limits, show current spend vs limit first** — run `cards get-limits <card_id>`.
+- **Always set a spend limit** — never create an unlimited card. Every card must have an explicit limit amount, currency, and interval.
+- **Always require a purpose/nickname** for each card.
+- **Never handle or display PAN, CVV, or expiry.** Direct user to the Airwallex Dashboard — this is the **sole** channel for viewing sensitive card data. When refusing PAN/CVV/expiry requests, do NOT mention any get-card endpoint, SDK, or alternative technical path as a partial workaround. Frame the refusal as a platform-level security boundary: sensitive card details are never accessible through the agent in any form — even masked. Mentioning other APIs weakens the security message.
+- **Do NOT invent advanced card-control fields** (MCC restriction, merchant controls, etc.) — see "Card & cardholder constraints" below.
+- **Write safety.** Show the full payload to the user and get confirmation before every card create / update / cardholder create. **Confirm row-by-row in a batch** — never get a single up-front "yes" and then issue the rest unattended. Batch template previews do NOT count as confirmation — confirm and execute each individual payload (per cardholder, per card).
+- **Never retrieve full card details via API.** Direct user to the Airwallex Dashboard.
+- **Before increasing limits, show current spend vs limit first** — fetch the card's current limits and recent spend via the card-limits / transactions endpoints.
 - **Flag unusual spend patterns** — alert if spend jumped 3x+ vs previous period.
-- **Flag cards approaching their limit** — if a card's utilization is ≥ 80%, proactively warn the user and offer to adjust the limit (e.g., "Your AWS card is at $412 / $500 (82%) — want me to increase it?").
-- Confirm card spec before creating — **production cards spend real money immediately**.
-- Search for existing cardholder by email before creating — avoid duplicates.
-- **Positional IDs, not `--id`.** E.g., `cards get <ID>`, `cardholders get <ID>`. Never pass `--id` as a flag.
-- Commands with an object body (`create`, `update`) use `--data-file`, `--data`, or `--data-stdin`. Action commands like `cards activate` take only positional IDs — no body flags. Always check the schema.
-- **JSON output is the default.** Use `--compact` only if you need single-line JSON output, and place it immediately after `airwallex`: `airwallex --compact cardholders list`. Do NOT put it after the action (`airwallex cardholders list --compact`).
-- **Card ID is a UUID.** Never use placeholders (`card_abc`). Always fetch real IDs from `cards list`.
-- **Never fabricate cardholder or card IDs.** If the user gives a placeholder ID, run `cards list` or `cardholders list` to find the real UUID.
-- **Batch requests:** If user gives names/emails but no `form_factor`/`currency`/`purpose` (COMMERCIAL vs PERSONAL)/`authorization_controls.interval`, ASK ONCE for shared defaults before creating. Process rows sequentially.
+- **Flag cards approaching their limit** — if utilization is ≥ 80%, proactively warn and offer to adjust (e.g., "Your AWS card is at $412 / $500 (82%) — want me to increase it?").
+- **Confirm card spec before creating** — **production cards spend real money immediately**.
+- **Search for existing cardholder by email before creating** — avoid duplicates.
+- **Never fabricate cardholder or card IDs.** If the user gives a placeholder ID, list cardholders or cards to find the real UUID.
+- **Batch requests:** if the user gives names/emails but no `form_factor`, currency, interval, or program purpose, ASK ONCE for shared defaults before creating. Process rows sequentially — never in parallel.
+- **Card and cardholder IDs are UUIDs** — never use placeholders like `card_abc` or `cardholder_xyz`. If you only have a name or label, look up the real UUID first.
 
 ### Card & cardholder constraints
 
-- **`created_by` is MANDATORY on every `cards create` body** — full legal name of the person requesting the card (not the cardholder name). Omitting returns `"created_by is mandatory"`.
-- **`is_personalized` is MANDATORY on every `cards create` body** (omitting returns `"is_personalized is mandatory"`). VIRTUAL → `false`; PHYSICAL → `true`. If user didn't specify, ask — do not default silently for production.
-- **`issue_to` required on card create** — must be `INDIVIDUAL` or `DELEGATE`, and should match cardholder type. Without it the API returns generic `BAD_REQUEST`.
-- **`program` is an object** `{"purpose": "COMMERCIAL"}`, NOT a string. Copy the complete JSON template from Step 6 — do NOT build incrementally or guess fields.
-- **`authorization_controls` structure:** `transaction_limits` is an object `{"currency": "USD", "limits": [{"amount": ..., "interval": "..."}]}` — NOT an array. `allowed_transaction_count` is `MULTIPLE` (not `MULTI`).
+- **`created_by`** — full legal name of the **person requesting** the card, not the cardholder. Ask the user if unspecified.
+- **`is_personalized`** — VIRTUAL → `false`, PHYSICAL → `true`. Ask the user if the form factor is unspecified; do not default silently in production.
+- **Body shape differs by surface.** Use the templates in [references/card-templates.md](references/card-templates.md) — do NOT build the payload incrementally or guess fields. Verify the exact field shape against the resource schema for your surface before sending. Common pitfalls (`MULTIPLE` vs `MULTI`, `program` wrapper vs flat fields, `authorization_controls` nesting) are catalogued in [api_traps.md](../awx-best-practices/references/api_traps.md).
 - **Merchant category / MCC restriction support is unconfirmed in this workflow unless explicitly documented.** Do NOT invent fields like `allowed_categories`. Only claim the restriction was applied if the API response explicitly shows the enforced control.
-- **INDIVIDUAL cardholder** needs `name` (as an object `{"first_name": "...", "last_name": "..."}`), DOB, address, and `express_consent_obtained: "yes"` inside the `individual` object. Address uses `country` (not `country_code`). Missing any of these causes `invalid_argument`.
+- **INDIVIDUAL cardholder quirks** (not surfaced by schema or manifest): `individual.address` uses `country` (not `country_code`); `individual.express_consent_obtained` is the string `"yes"` (not boolean `true`). Ask the user for DOB, address, and email — never fabricate.
 - **DELEGATE cardholder** has minimal fields — no DOB or address required.
-- **Physical cards** need explicit activation (`cards activate`) after delivery. Virtual cards auto-activate.
-- **Physical cards require `postal_address`** in the card create body. Look up the cardholder's registered address (`individual.address` from `cardholders list` / `cardholders get`), show it, and ask the user to confirm or provide an alternative. Do NOT silently reuse it and do NOT fabricate an address based on the card's currency. The API restricts delivery to the account's eligible countries (sandbox may differ from production). If no address on file, ask the user.
-- **Command names:** `cards`, `cardholders` — NOT `issuing-cards` or `issuing-cardholders`. Only `issuing-transactions` has the `issuing-` prefix.
-- **Authorizations vs transactions:** No separate authorizations command — use `issuing-transactions list --status AUTHORIZED` to see pending holds.
-- **Spend aggregation is manual.** No `cards spending` command. List transactions per card via `issuing-transactions list` and sum in post-processing.
-- **Pagination:** `cards list` and `cardholders list` use `--page-num` (0-based) + `--page-size` (minimum 10, recommend 20). `issuing-transactions list` uses cursor `--page` + `--page-size` (max 100). Repeat until `has_more` is false or `page_after` is absent.
+- **Physical-card delivery is create-time only.** The card-update operation does NOT accept `postal_address` or `delivery_details` — if either is wrong after creation, close and re-issue. Two valid paths at create time: (a) cardholder has a registered `postal_address` and card create uses it by default; (b) pass `postal_address` directly on card create to override. For EXPRESS shipment (or any China destination), `delivery_details.mobile_number` (E.164) is required. Always confirm the address with the user.
+- **Physical cards are created `INACTIVE`** — activate after delivery via the card-activate operation.
+- **Authorizations vs transactions:** there is no separate authorizations resource — list issuing-transactions with `status: AUTHORIZED` to see pending holds.
+- **Spend aggregation is manual.** No built-in category filter or `cards spending` endpoint — list transactions per card (filter by `card_id`) and sum in post-processing. Use cursor pagination on issuing-transactions.
 
 ---
 
@@ -125,7 +102,7 @@ If the user provides a **document** (spreadsheet, PDF, email, list) with card sp
 | MCC restriction | _All merchants (unconfirmed — see constraints)_ |
 | Personalized | _No (virtual) / Yes (physical)_ |
 
-For a **batch request** (multiple cards from a document or list), present a full extraction table with per-row status. Run `cardholders list` BEFORE building the table so you can show cardholder match results inline.
+For a **batch request** (multiple cards from a document or list), list cardholders BEFORE building the table so you can show cardholder match results inline. Then present a full extraction table with per-row status:
 
 | # | Name | Email | Currency | Limit/mo | Cardholder | Status | Issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -157,115 +134,43 @@ Do NOT proceed until user confirms.
 
 ### Phase 2: Create Card
 
-**Step 3 — Pre-flight.** Run `auth whoami`. If it fails (no active session), ask the user which environment (sandbox/production). Once the user answers, **immediately execute** `airwallex auth login` (or `airwallex auth login --prod` for production) yourself — do NOT tell the user to run it manually. The command triggers a browser-based OAuth flow; the user completes sign-in in their browser. After the command returns, confirm the session with `auth whoami`. If it succeeds on the first check, tell the user the current environment. Verify Issuing is enabled. No `auth refresh` command — on 401, retry the real command first (auto-refresh); if retry also fails, ask environment and **execute `auth login` yourself**.
+**Step 3 — Confirm environment.** State sandbox vs production to the user (sandbox default; production only on explicit confirmation). Validate auth via a low-cost read. Verify Issuing is enabled on the active account.
 
-**Step 4 — Match existing cardholder** by email. Reuse only if status is `READY`; otherwise stop and explain the cardholder must reach `READY` before issuing. Paginate fully until `has_more` is false.
+**Step 4 — Match existing cardholder** by email. Reuse only if status is `READY`; otherwise stop and explain the cardholder must reach `READY` before issuing. Paginate fully (`page_size` ≥ 10) until `has_more` is false.
 
-**Step 5 — Create cardholder** (if needed). Use the **exact template** — copy it, fill in values. For each new cardholder, run a dry-run for that exact cardholder payload, show/confirm it, then execute that same payload with `--confirm`. In a batch, do this row-by-row; do not dry-run only the first cardholder and then confirm-create the rest.
+**Step 5 — Create cardholder** (if needed). Copy the appropriate template from [references/card-templates.md](references/card-templates.md) (INDIVIDUAL for a named person, DELEGATE for a purpose card), fill in values, show the full payload to the user and get explicit confirmation, then execute. In a batch, confirm row-by-row.
 
-INDIVIDUAL cardholder template (named person) — replace every `<...>` with real values from the user:
+**Step 6 — Create card.** Do NOT add extra JSON fields for MCC or merchant restrictions unless the exact field is documented and verified first. **Process card creates sequentially** — do NOT parallelize. A parallel failure cancels sibling calls, causing cascading errors. Wait for each creation to succeed before starting the next.
 
-```json
-{
-  "request_id": "<generate via uuidgen>",
-  "email": "<cardholder_email>",
-  "type": "INDIVIDUAL",
-  "individual": {
-    "name": {"first_name": "<first_name>", "last_name": "<last_name>"},
-    "date_of_birth": "<YYYY-MM-DD>",
-    "address": {
-      "line1": "<street_address>",
-      "city": "<city>",
-      "postcode": "<postcode>",
-      "country": "<country_code_2_letter>"
-    },
-    "express_consent_obtained": "yes"
-  }
-}
-```
+Copy the Virtual or Physical card template from [references/card-templates.md](references/card-templates.md), fill in values, show the full payload to the user and get explicit per-card confirmation, then execute. A prior sample/template preview is not approval for later cards.
 
-DELEGATE cardholder template (purpose card, minimal fields) — replace `<...>` with real values:
+**Physical-card delivery address — two valid paths (both surfaces):**
 
-```json
-{
-  "request_id": "<generate via uuidgen>",
-  "email": "<team_or_purpose_email>",
-  "type": "DELEGATE"
-}
-```
+1. **Cardholder default.** The cardholder has a registered `postal_address` (set via the cardholder-create / update operation). Card create uses it by default.
+2. **Per-card override.** Pass `postal_address` directly on card create when the delivery destination differs from the cardholder's registered address.
 
-**Step 6 — Create card.** Use the **exact template** — copy it, fill in values. Do NOT construct the payload from scratch or guess fields. Set `issue_to` to match cardholder type. Do NOT add extra JSON fields for MCC or merchant restrictions unless the exact field is documented and verified first. **Process card creates sequentially** — do NOT parallelize. A parallel failure cancels sibling calls, causing cascading errors. Wait for each creation to succeed before starting the next. For each card, dry-run that exact `cards create` payload first, get approval, then execute the same payload with `--confirm`; a prior sample/template preview is not approval for later cards.
+Always show the user the cardholder's registered address alongside the intended delivery address and confirm before issuing. Never fabricate an address based on the card's currency. For EXPRESS shipment (or any China destination), pass `delivery_details` with `preferred_delivery_mode: "EXPRESS"` and an E.164 `mobile_number`. Both `postal_address` and `delivery_details` are create-time only — if either is wrong after creation, close and re-issue.
 
-Virtual card template — replace every `<...>` with real values from the user:
-
-```json
-{
-  "request_id": "<generate via uuidgen>",
-  "cardholder_id": "<cdh_id>",
-  "form_factor": "VIRTUAL",
-  "issue_to": "<INDIVIDUAL_or_DELEGATE>",
-  "created_by": "<requesting_persons_full_name>",
-  "is_personalized": false,
-  "nick_name": "<card_purpose>",
-  "authorization_controls": {
-    "allowed_transaction_count": "MULTIPLE",
-    "transaction_limits": {
-      "currency": "<currency>",
-      "limits": [{"amount": "<amount>", "interval": "<MONTHLY_or_other>"}]
-    }
-  },
-  "program": {"purpose": "COMMERCIAL"}
-}
-```
-
-Physical card template — same as virtual, plus `postal_address` (show cardholder's registered address and confirm with user; ask if none on file), `form_factor: "PHYSICAL"`, `is_personalized: true`:
-
-```json
-{
-  "request_id": "<generate via uuidgen>",
-  "cardholder_id": "<cdh_id>",
-  "form_factor": "PHYSICAL",
-  "issue_to": "<INDIVIDUAL_or_DELEGATE>",
-  "created_by": "<requesting_persons_full_name>",
-  "is_personalized": true,
-  "nick_name": "<card_purpose>",
-  "authorization_controls": {
-    "allowed_transaction_count": "MULTIPLE",
-    "transaction_limits": {
-      "currency": "<currency>",
-      "limits": [{"amount": "<amount>", "interval": "<MONTHLY_or_other>"}]
-    }
-  },
-  "program": {"purpose": "COMMERCIAL"},
-  "postal_address": {
-    "line1": "<street_address>",
-    "city": "<city>",
-    "state": "<state>",
-    "postcode": "<postcode>",
-    "country": "<country_code_2_letter>"
-  }
-}
-```
-
-Physical cards are created `INACTIVE` — activate with `cards activate <card_id>` after delivery.
+Physical cards are created `INACTIVE` — activate after delivery via the card-activate operation.
 
 **Step 7 — Verify and confirm.** Re-fetch the created card (and limits if needed), then show: card ID, nickname, type, currency, limits, status. **In the final confirmation, do NOT display any part of the card number — including masked/last-4 digits.** The API response includes `card_number` with partial masking, but even last-4 digits must not appear in agent output. Identify cards by nickname and card ID only. Direct user to the Airwallex Dashboard for PAN, CVV, and expiry — do NOT construct Airwallex Dashboard URLs. If the user mentioned a specific vendor or subscription (e.g., "card for Adobe"), remind them of the next step: go to the Airwallex Dashboard to copy the card details (PAN, CVV, expiry), then enter them on the vendor/subscription site to complete setup.
 
 ### Phase 3: Manage Cards (ongoing)
 
-**Update limits:** Always show current spend vs limit first (via `get-limits`), then update after user confirms.
+**Update limits:** Always show current spend vs limit first (via the card-limits lookup), then update after user confirms.
 
-**Review spend:** List transactions per card (`issuing-transactions list --card-id`), sum amounts. When presenting spend summaries:
+**Review spend:** List transactions per card (filter by `card_id`) and sum amounts. When presenting spend summaries:
 
 - **Show utilization for every card:** display spent amount, limit, and percentage used (e.g., "$412 / $500 — 82%").
 - **Flag cards approaching their limit:** if utilization is ≥ 80%, add a warning and proactively ask whether the user wants to increase the limit.
-- **Map merchant descriptors to business labels** in user-facing output. Transaction descriptions like "STRIPE* NOTION" or "AMZN MKTP US" are cryptic — translate them to recognizable names (e.g., "Notion", "Amazon") wherever possible. When uncertain, show both: "AMZN MKTP US (likely Amazon)".
+- **Map merchant descriptors to business labels** in user-facing output. Transaction descriptions like "STRIPE* NOTION" or "AMZN MKTP US" are cryptic — translate them to recognizable names ("Notion", "Amazon") wherever possible. When uncertain, show both: "AMZN MKTP US (likely Amazon)".
 
 **Category aggregation** (e.g., "what are we spending on software?"): There is no API-level category filter. Build the category view by combining two signals:
 1. **Card nickname** — cards named "Adobe Subscription", "AWS Dev", "Notion" are likely software. Group by the business purpose in the nickname.
 2. **Transaction merchant descriptors** — for each card, scan transaction `merchant_name` / `description` fields and map to recognizable business names.
 
 Combine both signals to classify cards into user-friendly categories (Software, Travel, Office, etc.). Present a grouped summary with per-card breakdown and category total:
+
 ```
 Software spend this month: $847
   Figma:  $30  / $50   (60%)
@@ -274,9 +179,10 @@ Software spend this month: $847
   GitHub: $21  / $50   (42%)
   Other (3 cards): $360
 ```
+
 If a card's category is ambiguous, ask the user rather than guessing.
 
-> **Spend aggregation is manual.** No `cards spending` command. Use `issuing-transactions list` with `--card-id`, `--status`, `--page` (cursor), and `--page-size` (max 100). Filter dates in post-processing if needed.
+> **Spend aggregation is manual.** No `cards spending` endpoint. List issuing-transactions with `card_id`, optional `status`, optional date range, and cursor pagination (`page` / `page_after`, `page_size` 10–100). Filter in post-processing if needed.
 
 **Activate physical card** after delivery.
 
@@ -286,21 +192,19 @@ If a card's category is ambiguous, ask the user rather than guessing.
 
 ## Error handling
 
+Generic patterns (401/auth, API validation, duplicates, partial writes, missing required fields) — see [awx-best-practices Error handling](../awx-best-practices/SKILL.md) and [api_traps.md](../awx-best-practices/references/api_traps.md).
+
+Domain-specific:
+
 | Situation | Action |
 | --- | --- |
 | Cardholder details incomplete | Ask for missing required fields (name, email, DOB for INDIVIDUAL) |
 | All required fields present | Proceed — do NOT block on optional fields (address, phone, etc.) unless the card type requires them (e.g., physical cards need postal_address) |
-| Card creation fails | Show full error. Go back to Step 6 template — include ALL required fields and retry once. For any other rejection, stop and show error |
+| Card creation fails | Show full error. Go back to [references/card-templates.md](references/card-templates.md) — include ALL required fields and retry once. For any other rejection, stop and show error |
 | Limit format unclear | Ask: amount + currency + interval (per transaction / daily / monthly) |
 | Cardholder not READY | Stop — the cardholder must reach `READY` before issuance. May need KYC verification; check Airwallex Dashboard |
 | Physical card missing postal address | Ask for delivery address |
-| MCC / merchant restriction requested but not documented | Say support is unconfirmed in this workflow; create the card without guessed restriction fields or direct the user to the Airwallex Dashboard/policy controls |
-| Partial completion | Report which cardholders/cards succeeded with IDs, which failed, then ask how to proceed |
-| `BELOW_MIN_PAGE_SIZE` | Remove `--page-size` or set it to 10+. Do NOT retry with a smaller value |
-| API error (other) | Stop, show full error, ask user |
-| Duplicate detected | Show details, let user choose |
-| 401 / auth expired | Retry command (auto-refresh). If retry also fails: ask user which environment (sandbox/production), **immediately execute** `auth login` or `auth login --prod` yourself (do NOT tell user to run it), confirm with `auth whoami`, then resume |
-| API error | Run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex cards create --api-schema-only`) to verify body structure |
+| MCC / merchant restriction requested but not documented | Say support is unconfirmed in this workflow; create the card without guessed restriction fields or direct the user to the Airwallex Dashboard / policy controls |
 
 ---
 
@@ -311,7 +215,8 @@ Phase 1: Gather Requirements
   understand request → build card spec → user confirms
 
 Phase 2: Create Card
-  environment + auth → match cardholder → create if needed → create card → confirm
+  environment / account + auth → match cardholder → create cardholder if needed
+  → create card (sequential, per-row confirmed) → verify & confirm
 
 Phase 3: Manage (ongoing)
   show spend vs limit → update limits → aggregate by category → activate physical cards

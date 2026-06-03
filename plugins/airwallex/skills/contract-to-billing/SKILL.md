@@ -4,7 +4,7 @@ description: Extract billing details from purchase orders, contracts, or quotes,
 metadata:
   author: Airwallex
   version: 0.1.0
-compatibility: Requires airwallex CLI installed and on PATH. Authenticated via airwallex auth login (OAuth browser flow). Best results with Claude Opus.
+compatibility: Works with the Airwallex CLI (`airwallex` binary on PATH, authenticated via `airwallex auth login`) or the Airwallex MCP server (enabled and authenticated). Best results with Claude Opus.
 ---
 
 # Contract to Billing
@@ -20,37 +20,25 @@ Reads a customer document (PO, contract, quote), extracts line items with AI, an
 
 ## When NOT to use
 
-**FIRST ACTION — before any CLI command:** Run `airwallex --tree --compact` to discover available command groups and subcommands. If a command or subcommand does not appear in the tree output, it **does not exist** — do NOT invent it. (Global flags: `--compact` for single-line JSON, `--dry-run` to preview writes, `--confirm` to execute writes — valid only when placed immediately after `airwallex`.)
+This skill only covers Billing-domain operations — invoices (list, create, retrieve, finalize, void, mark-as-paid, plus line-item add / update / delete / list), products (list, create), prices (list, create), customers (list, retrieve, create, update), subscriptions (create, list items), coupons (list, create, update), meters (list, create, update), payment sources (list), and billing transactions (list, retrieve). Credit notes follow `create` → `line-items add` → `finalize` — if the operation is not exposed on the current surface, direct the user to the Airwallex Dashboard.
 
-**Global flag placement:** Global flags must go immediately after `airwallex`, before the resource/action. This applies to `--compact`, `--dry-run`, and `--confirm` (plus `--tree` for discovery). Correct: `airwallex --compact invoices list`, `airwallex --dry-run invoices create --data-file payload.json`, `airwallex --confirm invoices finalize <id>`. Wrong: `airwallex invoices list --compact`, `airwallex invoices create --dry-run --data-file payload.json`, `airwallex invoices finalize <id> --confirm` — these fail with `No such option`.
-
-This skill only covers Billing-domain CLI commands (`invoices`, `products`, `prices`, `billing-customers`, `subscriptions`, `coupons`, `credit-notes`, `billing-checkouts`, `billing-transactions`, `meters`, `payment-links`, `payment-sources`, `usage-events`). If the task requires a command group outside this domain (e.g., `cards`, `beneficiaries`, `conversions`, `balances`, `quotes`), **stop — this is the wrong skill.** Redirect the user:
+If the task requires capabilities outside this domain, **stop — this is the wrong skill.** Redirect the user:
 
 - Wire transfers / payouts → not yet available (use Airwallex Dashboard)
 - Setting up suppliers / beneficiaries → **beneficiary-creation** skill
 - FX conversions, balances, treasury → **manage-cashflow** skill
 - Provisioning corporate cards → **card-provisioning** skill
-- Ad-hoc CLI tasks without a document → **awx-best-practices** skill (fallback)
-
-## Prerequisites
-
-- `airwallex` CLI installed and on PATH
-- Authenticated via `airwallex auth login` (check with `airwallex auth whoami`)
-- Environment: sandbox by default. For production, log in with `airwallex auth login --prod`. The environment is locked to the authenticated session — there is no per-command override.
-- **Verify commands before use:** Run `airwallex --tree --compact <group>` (e.g., `airwallex --tree --compact invoices`) to confirm the subcommand exists. For write commands, run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex invoices create --api-schema-only`) to get the request body schema — read every `required: true` field and include them all in the payload. For read commands, use `airwallex <resource> <action> --help` (e.g., `airwallex invoices list --help`) to check flags.
-- **`request_id` is MANDATORY for all write commands.** Always include `"request_id"` in the JSON body for every `create`, `update`, and `line-items add/update/delete` command — the API rejects writes without it. Generate a fresh UUID for each distinct operation via `uuidgen | tr '[:upper:]' '[:lower:]'` — NEVER hand-write a UUID or use sequential/patterned values like `a1b2c3d4-...`. If retrying the same logical operation after a transient/network failure, reuse the same `request_id`; only generate a new one for a distinct new operation. Action commands without a body (e.g., `invoices finalize`, `invoices void`) do not take `request_id`.
-
----
+- Ad-hoc tasks outside billing workflow → **awx-best-practices** skill (fallback)
 
 ## Non-negotiables
 
 ### Terminology
 
 - **Invoices = receivables (money in).** Issued BY the user TO their customers. Never say "obligation" for invoices.
+- **Invoice lifecycle.** **DRAFT → add line items → finalize → FINALIZED (immutable)**. To correct after finalize: void → create new.
 - **Products & prices.** Every invoice line item needs a product. For document-specific ad-hoc fees (shipping, handling, setup fees, tax), always use the **inline price mechanism** (see Path B in Workflow) with a newly created product rather than matching existing fee products — fee amounts and descriptions vary per order. Only reuse existing products for the core goods/services sold (e.g., "Widget Alpha").
 - **Invoice vs Subscription.** One-time quote → Invoice. Recurring terms → Subscription. Choose before creating.
 - **ONE_OFF vs RECURRING.** Baked in at price creation — cannot flip later.
-- **`billing_type`** only accepts `IN_ADVANCE` or `IN_ARREARS` (or omit it entirely).
 - **`collection_method` mapping from document language:**
 
 | Document says | API value |
@@ -64,51 +52,45 @@ Never use `SEND_INVOICE`, `MANUAL`, `AUTOMATIC`, or any value not in the exact l
 ### Operational rules
 
 - **For ambiguous-intent requests, do not start the workflow until the action is confirmed.** If the user has not clearly confirmed the exact write action, stop before schema reads, auth checks, or other workflow setup that materially advances execution.
-- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed to make the API call. This applies to amounts, currencies, customer details, payment terms, collection method, and any other field. Do NOT fill in defaults, placeholder values, or "reasonable guesses".
-- Flag extraction uncertainty with `[?]` — never guess currencies, quantities, or amounts.
-- Never round or modify extracted amounts.
+- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed. Do NOT fill in defaults, placeholder values, or "reasonable guesses".
+- **Flag extraction uncertainty with `[?]`** — never guess currencies, quantities, or amounts.
+- **Never round or modify extracted amounts.**
 - **Always fetch fresh data** — re-fetch before every step.
-- **Prefer business labels over raw IDs in user-facing output.** In summaries, tables, and explanations, show customer names, product names, or other human-readable business labels instead of raw system IDs whenever possible. Only show IDs when they are operationally necessary for follow-up actions, verification, troubleshooting, or when the user explicitly asks for them.
+- **Prefer business labels over raw IDs in user-facing output.** Show customer names and product names first; surface IDs only when operationally necessary or when the user asks.
 - **One wallet, multiple currencies.** Say "AUD balance" — never "AUD wallet."
 - **Default to sandbox.** Confirm with user before any production write.
-- Show extracted data in five tables and get user confirmation **before any API call**.
-- Search for existing customers and core products/prices before creating — avoid duplicates. (Ad-hoc fee products like shipping/handling are exempt — see Terminology.)
-- Always confirm before finalizing — finalization is **irreversible**.
-- Prices must match target: **ONE_OFF** for invoice line items, **RECURRING** for subscription items.
-- **Infer collection method from the document** using the mapping table in Terminology above. If the document clearly implies a method (e.g., "bank transfer" → `OUT_OF_BAND`, "online payment" → `CHARGE_ON_CHECKOUT`), use it and note the choice in the extraction summary. **Ask the user when the document language is genuinely ambiguous or absent.** If the inferred method is `CHARGE_ON_CHECKOUT`, ask for `linked_payment_account_id` — without it the invoice has no checkout link and is unusable.
+- **Show extracted data in five tables and get user confirmation before any API call.**
+- **Search for existing customers and core products/prices before creating** — avoid duplicates. (Ad-hoc fee products like shipping/handling are exempt — see Terminology.)
+- **Always confirm before finalizing** — finalization is **irreversible**.
+- **Prices must match target:** **ONE_OFF** for invoice line items, **RECURRING** for subscription items.
+- **Infer collection method from the document** using the mapping table above. If the document clearly implies a method (e.g., "bank transfer" → `OUT_OF_BAND`, "online payment" → `CHARGE_ON_CHECKOUT`), use it and note the choice in the extraction summary. Ask the user when the document language is genuinely ambiguous or absent. If the inferred method is `CHARGE_ON_CHECKOUT`, ask for `linked_payment_account_id` — without it the invoice has no checkout link and is unusable.
 - **Never claim external payment-gateway setup.** External checkout routing, gateway configuration, and non-Airwallex collection integrations are outside this skill unless the exact capability is explicitly confirmed by current docs and schemas. This skill creates Airwallex Billing resources only.
-- **Split bundled requests cleanly — unsupported extras must not block the supported workflow.** If the user asks for an Airwallex invoice/subscription plus an unsupported extra (e.g., Stripe gateway, external payment processor), **complete the Airwallex Billing setup first** without waiting for the unsupported portion to be resolved. After the supported work is done, separately state what was not configured and why.
+- **Split bundled requests cleanly — unsupported extras must not block the supported workflow.** If the user asks for an Airwallex invoice/subscription plus an unsupported extra (e.g., Stripe gateway, external payment processor), complete the Airwallex Billing setup first. After the supported work is done, separately state what was not configured and why.
 - **Never invent billing automation fields.** If dunning, reminder cadence, external collection, or downstream automation support is unconfirmed, say so plainly and omit guessed JSON fields.
-- **Dry-run before every write.** Before executing any write command (POST), first run it with the `--dry-run` global flag to preview the request envelope without sending it. Show the envelope to the user (method, URL, body, environment) and get explicit approval. Only then re-run with `--confirm` to execute. The two-step sequence is: (1) `airwallex --dry-run <command>` → show preview → user approves → (2) `airwallex --confirm <command>` → execute. **Never skip the dry-run step for write operations.** This applies to ALL writes — including action commands like `invoices finalize`, `invoices void`, `invoices delete`, and `invoices mark-as-paid`. Without `--confirm`, these commands are blocked with `SAFETY_BLOCK`.
-- **Positional IDs, not `--id`.** E.g., `invoices get <ID>`, `products get <ID>`. Never pass `--id` as a flag.
-- Commands with an object body (`create`, `update`, `line-items add/update/delete`) use `--data-file`, `--data`, or `--data-stdin`. Action commands (`invoices finalize`, `invoices void`, `invoices delete`, `invoices mark-as-paid`) take only positional IDs — no body flags, but **still require `--confirm`** (or `--dry-run` for preview). Example: `airwallex --confirm invoices finalize <id>`. Exception: `credit-notes finalize` does accept body flags. Always check the schema.
-- **JSON output is the default.** Use `--compact` only if you need single-line JSON output, and place it immediately after `airwallex`: `airwallex --compact invoices list`. Do NOT put it after the action (`airwallex invoices list --compact`).
+- **Write safety.** Show the full payload to the user and get confirmation before every write — invoice create / line-item write / finalize / void / mark-paid / subscription create. **Action commands** (`invoices finalize`, `invoices void`, `invoices delete`, `invoices mark-as-paid`) need the same confirmation as create/update — they are not free passes.
 
 ### Invoice & subscription constraints
 
 - **`legal_entity_id`** — **Before creating any invoice or subscription**, ask the user: *"Does your account have multiple legal entities? If so, please provide the `legal_entity_id` (available in the Airwallex Dashboard)."* If the account has multiple legal entities and this field is omitted, the API rejects with `"Need to specify the legal_entity_id in the request"`. This ID is **not discoverable via API**. If the user confirms only one legal entity, omit the field.
-- **`collection_method` MUST be set BEFORE finalize** — set at create time or via `invoices update`. See Terminology above for exact valid values.
-- **`invoices create` has no `--amount` or `--customer-name`** — amounts go in line items, customer is `billing_customer_id` in JSON body, notes go in `memo`. There is no `description` field on invoices.
+- **`collection_method` MUST be set BEFORE finalize** — set at create time or via the invoice update operation. See Terminology above for exact valid values.
+- **Invoice body shape.** Amounts live in line items (no top-level amount field); customer is `billing_customer_id`; notes go in `memo`. There is no `description` field on invoices.
+- **Amounts come from line items, not the invoice create body** — `invoice_items` in the create body is **silently ignored**. Use the dedicated line-items operation after the draft exists.
 - **Pick `due_at` OR `days_until_due`** — passing both is rejected.
-- **Timestamp format:** `+0000` offset everywhere (e.g., `2026-05-15T00:00:00+0000`). `Z` suffix and bare dates rejected. Applies to `due_at`, `starts_at`, etc.
-- **`line-items add` / `line-items update` body must be `{"line_items": [...]}`** — bare array rejected. `line-items delete` body is `{"line_item_ids": ["id1","id2"]}`.
-- **Line items only accept ONE_OFF + PER_UNIT/FLAT prices** — RECURRING, VOLUME, GRADUATED rejected. If the contract has tiered pricing, split into separate PER_UNIT line items per band.
+- **Timestamp format:** include an explicit timezone — bare dates are rejected. Most body fields accept both `+0000` and `Z`. **Tested exception:** the billing-invoice listing only accepts `+0000` — `Z` returns a 400. Both surfaces URL-encode for you — do NOT pre-encode the offset to `%2B0000`.
+- **Line items body shape.** Add / update wraps the array in `line_items`; delete uses `line_item_ids`. Bare arrays are rejected.
+- **Line items only accept ONE_OFF + PER_UNIT/FLAT prices** — RECURRING, VOLUME, GRADUATED are rejected. If the contract has tiered pricing, split into separate PER_UNIT line items per band.
 - **Inline price objects do NOT include `currency`** — inherited from invoice.
-- **Invoice must have line items before finalize** — use `invoices line-items add` on the draft to add items. Do NOT rely on passing `invoice_items` in the `invoices create` body — it may be silently ignored, resulting in a draft with `total_amount: 0` that fails to finalize. Always verify the draft has items (check `total_amount` > 0) before finalizing.
-- **Discounts:** Use coupons (`"discounts": [{"type": "COUPON", "coupon": {"id": "..."}}]`), not negative `flat_amount`. For credits, use `credit-notes create`.
-- **Coupons** — command group is `coupons` (NOT `discounts`, `promo-codes`, or `vouchers`). Required fields: `name`, `discount_model` (`FLAT` or `PERCENTAGE`), `duration_type` (`ONCE`/`CUSTOM`/`INDEFINITELY`), `request_id`. PERCENTAGE: set `percentage_off` (0–100) — do NOT include `currency` or `amount_off`. FLAT: set `amount_off` + `currency`. `duration_type: CUSTOM` needs `duration` object: `{"period": N, "period_unit": "MONTH"}`. Apply to invoices/subscriptions via `"discounts": [{"type": "COUPON", "coupon": {"id": "..."}}]`.
+- **Verify the draft has items (`total_amount > 0`) before finalize.** A draft with no line items will fail to finalize — and `invoice_items` in the invoice create body is silently dropped, so this state is easy to land in by accident.
+- **Discounts:** Use coupons (`"discounts": [{"type": "COUPON", "coupon": {"id": "..."}}]`), not negative `flat_amount`. **Credit notes:** lifecycle is `create` → `line-items add` → `finalize`; if the operation is not exposed on the current surface, direct the user to the Airwallex Dashboard.
+- **Coupons:** PERCENTAGE vs FLAT are mutually exclusive. PERCENTAGE → `percentage_off` (0–100), no `currency`/`amount_off`. FLAT → `amount_off` + `currency`, no `percentage_off`. `duration_type: CUSTOM` needs a `duration` object with both `period` and `period_unit`.
 - **`metadata`** replaces entirely on update — omit to keep existing.
-- **Tiered pricing** uses `upper_bound` (not `up_to`). Last tier omits `upper_bound` entirely.
+- **Tiered pricing** uses `upper_bound` (not `up_to`); the last tier omits `upper_bound` entirely.
 - **`starts_at`** (subscriptions) must be strictly future. Compute dynamically — never hardcode. Omit to default to "now".
 - **Subscription `items[*].price_id`** must reference RECURRING prices — ONE_OFF rejected.
-- **`AUTO_CHARGE`** requires `payment_source_id`.
-- **Recurring prices** need full `recurring` object: `{"interval": 1, "period_unit": "MONTH"}`. Missing `period_unit` causes validation error. `period_unit`: `DAY`/`WEEK`/`MONTH`/`YEAR`.
-- **`products create`** body: `{"name", "description", "unit"}` only — no address.
-- **`billing-customers create`** requires `address.country_code` (ISO-3166 alpha-2).
+- **`AUTO_CHARGE`** requires `payment_source_id` — ask the user.
 - **Tax handling** — Airwallex Billing does not have a built-in tax-rate engine. If the document includes GST, VAT, or sales tax, extract the tax amount and create it as an explicit line item (with a dedicated "Tax" or "GST" product) or include the tax-inclusive amount in the unit price. Flag `[?]` if it is unclear whether document prices are tax-inclusive or exclusive, and ask the user. Do NOT silently compute tax.
-- **External payment gateways and custom dunning** — see operational rules above for scope boundaries. Do NOT claim third-party gateway was configured or invent dunning fields (`dunning.enabled`, `dunning.reminders`, `days_after_due`, etc.).
-- **Subcommand naming:** `invoices line-items add` / `credit-notes line-items add` use nested `line-items` group; `subscriptions items list` / `subscriptions items get` also use a nested `items` group. Always check schema.
-- **Pagination:** Most billing commands use cursor-based `--page` + `--page-size` (minimum 10; response has `page_after` — pass to `--page`, repeat until absent). Exception: `payment-links list` uses `--page-num` (0-based) + `--page-size` (minimum 10). Always check `--help` for the exact pagination style of each command.
+- **External payment gateways and custom dunning** — see operational rules above. Do NOT claim a third-party gateway was configured or invent dunning fields (`dunning.enabled`, `dunning.reminders`, `days_after_due`, etc.).
+- **Pagination:** `page_size` minimum 10 across billing list endpoints. Most billing listings use cursor pagination — pass `page_after` back into the next call. The `payment-links list` endpoint is an exception (numeric `page_num`, 0-based). Repeat until cursor absent.
 
 ---
 
@@ -116,7 +98,7 @@ Never use `SEND_INVOICE`, `MANUAL`, `AUTOMATIC`, or any value not in the exact l
 
 ### Phase 1: Extract
 
-**Step 1 — Get the document.** Accept local files (`.pdf` `.docx` `.txt` `.md` `.png` `.jpg` `.webp`), folder paths, download URLs (via `curl`), or pasted text.
+**Step 1 — Get the document.** Accept local files (`.pdf` `.docx` `.txt` `.md` `.png` `.jpg` `.webp`), folder paths, or pasted text. If shell access is available, you can also fetch download URLs.
 
 Reading strategy: PDF → Read tool (fall back to `pdfplumber`). DOCX → `python-docx`. Image → Read tool. TXT/MD → Read tool.
 
@@ -142,9 +124,11 @@ Always use structured tables, not prose summaries. If a section does not apply, 
 
 ### Phase 2: Match & Create
 
-**Step 5 — Pre-flight checks.** Run `auth whoami`. If it fails (no active session), ask the user which environment (sandbox/production). Once the user answers, **immediately execute** `airwallex auth login` (or `airwallex auth login --prod` for production) yourself — do NOT tell the user to run it manually. The command triggers a browser-based OAuth flow; the user completes sign-in in their browser. After the command returns, confirm the session with `auth whoami`. If it succeeds on the first check, tell the user the current environment. Validate required fields for all planned operations. No `auth refresh` command — on 401, retry the real command first (auto-refresh); if retry also fails, ask environment and **execute `auth login` yourself**.
+**Step 5 — Confirm environment.** State sandbox vs production to the user (sandbox default; production only on explicit confirmation). Validate required fields for all planned operations. Include `request_id` (UUIDv4) on every write that accepts it.
 
-**Step 6 — Match existing resources.** Search for customers by email (`billing-customers list --email`). For products, `products list` has **no name filter** — paginate fully (`page_after` → next page until absent) and match by name client-side. Search prices by product (`prices list --product-id`). Present matches and get confirmation. **Only match core goods/services** (e.g., "Widget Alpha"). Do NOT match existing products for per-order ad-hoc fees (shipping, handling, setup charges) — always create fresh products for these and use inline prices in line items.
+**Step 6 — Match existing resources.** Search for customers by email (filter parameter `email` on the billing-customers list). For products, the billing-products list has **no name filter** — paginate fully and match by name client-side. Search prices by product (parameter `product_id` on the billing-prices list). Present matches and get confirmation.
+
+**Only match core goods/services** (e.g., "Widget Alpha"). Do NOT match existing products for per-order ad-hoc fees (shipping, handling, setup charges) — always create fresh products for these and use inline prices in line items.
 
 **Step 7 — Create missing resources.** Create ALL missing products and needed prices from the contract (full catalog), not just current order.
 
@@ -156,8 +140,7 @@ Always use structured tables, not prose summaries. If a section does not apply, 
 
 **Step 8 — Route based on Table 4:**
 
-The path comes from the extracted document terms, not from user preference.
-Requests for external payment gateways, or custom dunning do **not** change the billing route. Create the Airwallex invoice/subscription that is supported, then clearly state any unsupported extra was not configured.
+The path comes from the extracted document terms, not from user preference. Requests for external payment gateways or custom dunning do **not** change the billing route. Create the Airwallex invoice/subscription that is supported, then clearly state any unsupported extra was not configured.
 
 | Table 4 | Action |
 | --- | --- |
@@ -175,7 +158,7 @@ Create subscription with `billing_customer_id`, `currency`, `collection_method`,
 
 **Create draft** with `billing_customer_id`, `currency`, `collection_method`, optional `days_until_due`/`due_at`, `memo`.
 
-**Add line items** — body: `{"line_items": [{"price_id": "...", "quantity": N}, ...]}`. For ad-hoc fees, use inline price: `{"price": {"product_id": "...", "pricing_model": "FLAT", "flat_amount": 350.00, "description": "Shipping"}, "quantity": 1}`. Do NOT include `currency` in inline price. If the contract uses tiered pricing, convert the billed tiers into invoice-compatible PER_UNIT/FLAT line items per band — do not attach VOLUME/GRADUATED `price_id`s to invoice line items.
+**Add line items.** Use the dedicated line-items operation after the draft exists. Body shape for an existing price: `{"price_id": "...", "quantity": N}`. For ad-hoc fees, use inline price: `{"price": {"product_id": "...", "pricing_model": "FLAT", "flat_amount": 350.00, "description": "Shipping"}, "quantity": 1}`. Do NOT include `currency` in inline price. If the contract uses tiered pricing, convert the billed tiers into invoice-compatible PER_UNIT/FLAT line items per band — do not attach VOLUME/GRADUATED `price_id`s to invoice line items.
 
 **Finalize** — confirm with user first. Show summary: resources created/reused, total, due date, `pdf_url`, `hosted_url`.
 
@@ -193,19 +176,17 @@ Airwallex Billing has **no API to email invoices directly** — the agent cannot
 
 ## Error handling
 
+Generic patterns (401/auth, API validation, duplicates, partial writes, missing required fields) — see [awx-best-practices Error handling](../awx-best-practices/SKILL.md) and [api_traps.md](../awx-best-practices/references/api_traps.md).
+
+Domain-specific:
+
 | Situation | Action |
 | --- | --- |
 | Document unreadable | Ask for content another way and stop |
-| Required field missing | List gaps, stop, ask user |
 | Ambiguous extraction | Flag with `[?]`, ask user, do not guess |
-| API error | Stop, show full error, ask user |
-| `legal_entity_id` required (missed pre-check) | The account has multiple legal entities. Ask the user which `legal_entity_id` to use — this is not discoverable via API. Include it in the request body and retry. |
+| `legal_entity_id` required (missed pre-check) | Account has multiple legal entities. Ask the user which `legal_entity_id` to use — not discoverable via API. Include in the request body and retry. |
 | User requests external gateway setup | Explain that external gateway configuration is outside this skill's scope. Continue with Airwallex Billing setup only if the user still wants that. |
 | User requests custom dunning cadence not confirmed by docs | Do not invent fields. Say the reminder customization is unsupported or handled separately, and continue with the supported invoice/subscription setup only. |
-| Partial completion | Report what succeeded and failed with IDs, then ask user how to proceed |
-| Duplicate detected | Show details, let user choose |
-| 401 / auth expired | Retry command (auto-refresh). If retry also fails: ask user which environment (sandbox/production), **immediately execute** `auth login` or `auth login --prod` yourself (do NOT tell user to run it), confirm with `auth whoami`, then resume |
-| API error | Run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex invoices create --api-schema-only`) to verify body structure |
 
 ---
 
@@ -216,7 +197,7 @@ Phase 1: Extract
   get document → read → extract → build 5 tables → validate → user confirms
 
 Phase 2: Match & Create
-  environment + auth → match existing → user confirms
+  environment / account + auth → match existing → user confirms
     → create missing → confirm collection method
       → if recurring: subscription → if one-time: invoice → finalize
       → receivables note (cross-ref with manage-cashflow)

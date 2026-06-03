@@ -1,18 +1,18 @@
 ---
 name: manage-cashflow
 description: >
-  Multi-currency cash management — balances, receivables, obligations, FX exposure, runway, rebalancing plans, and indicative rates. Use this skill whenever the user asks about cash position, balances, treasury health, shortfalls, crunch points, runway, rebalancing, FX rates or positions, who owes them money, what bills are due, money coming in or going out, urgency triage, or gives a cash health check prompt. ALWAYS use this skill when the user mentions Airwallex balances, currencies, or requests money movement (conversions, wires, transfers, rate locking) — even if the request seems simple to refuse, the skill contains mandatory safety protocols for refusal and redirect. Also load this skill when the user asks for a "transaction report", "accounting report", "reconciliation", "P&L", or "ledger" — the skill contains the required scope-boundary rules to refuse these properly and offer supported alternatives. Do NOT use for creating invoices, setting up suppliers/beneficiaries, or provisioning cards.
+  Multi-currency cash management — balances, receivables, obligations, FX exposure, runway, rebalancing, and indicative FX rates. Use when the user asks about cash position, treasury health, what is owed, money in or out, FX positions, or requests money movement (conversions, transfers, rate locks). Also load this skill when the user asks for a "transaction report", "accounting report", "reconciliation", "P&L", or "ledger" — the skill contains the required scope-boundary rules to refuse these properly and offer supported alternatives. Do NOT use for creating invoices from documents, supplier/beneficiary onboarding, or card provisioning (use the workflow skills for those).
 metadata:
   author: Airwallex
   version: 0.1.0
-compatibility: Requires airwallex CLI installed and on PATH. Authenticated via airwallex auth login (OAuth browser flow). Best results with Claude Opus.
+compatibility: Works with the Airwallex CLI (`airwallex` binary on PATH, authenticated via `airwallex auth login`) or the Airwallex MCP server (enabled and authenticated). Best results with Claude Opus.
 ---
 
 # Manage Cashflow
 
 ## HARD GATE — money movement requests (overrides everything below)
 
-**This gate fires BEFORE anything else — before reading attachments, before choosing scenario/live mode, before checking auth, before loading schemas, before any API call.**
+**This gate fires BEFORE anything else — before reading attachments, before checking auth, before loading schemas, before any API call.**
 
 If the user's message contains money-movement intent — convert funds, wire money, transfer, pay a supplier, send money, move funds, lock a rate, execute an FX conversion — apply this gate immediately:
 
@@ -24,9 +24,8 @@ If the user's message contains money-movement intent — convert funds, wire mon
 2. **Before that refusal sentence, do NOT** (zero tolerance — any of these before the refusal = failure):
    - call the Read tool on any attachment or file
    - call ANY tool at all (no Bash, no Read, no Search — nothing)
-   - choose scenario mode or live mode
    - ask clarifying questions
-   - check auth or call `auth whoami`
+   - check authentication or environment
    - fetch balances, invoices, FX rates, or any data
    - request beneficiary or bank-account details
    - imply that execution would be possible if more information were provided
@@ -60,11 +59,7 @@ Aggregates balances, receivables, obligations, and FX exposure. Proposes rebalan
 
 ## When NOT to use
 
-**FIRST ACTION — before any CLI command:** Run `airwallex --tree --compact` to discover available command groups and subcommands. If a command or subcommand does not appear in the tree output, it **does not exist** — do NOT invent it. (Global flags: `--compact` for single-line JSON, `--dry-run` to preview writes, `--confirm` to execute writes — valid only when placed immediately after `airwallex`.)
-
-**Global flag placement:** Global flags must go immediately after `airwallex`, before the resource/action. This applies to `--compact`, `--dry-run`, and `--confirm` (plus `--tree` for discovery). Correct: `airwallex --compact balances get-current`, `airwallex --dry-run global-accounts create --data-file payload.json`, `airwallex --confirm global-accounts create --data-file payload.json`. Wrong: `airwallex balances get-current --compact`, `airwallex global-accounts create --dry-run --data-file payload.json`, `airwallex global-accounts create --confirm --data-file payload.json` — these fail with `No such option`.
-
-This skill only covers Treasury/Cashflow-domain CLI commands (`balances`, `conversion-rates`, `conversions`, `conversion-amendments`, `global-accounts`, `invoices`, `issuing-transactions`, `spend-bills`, `spend-vendors`, `transfers`, `payment-intents`, `beneficiaries`, `billing-customers`, `cards`). If the task requires a command group outside this domain (e.g., `products`, `prices`, `credit-notes`, `coupons`), **stop — this is the wrong skill.** Redirect the user:
+This skill only covers Treasury/Cashflow-domain operations — current and historical balances, FX rate lookups, conversion listing, amendment listing, global accounts (and their transactions), billing-invoice listing, issuing-transaction listing (card authorizations), supplier bills and vendor lookups, transfer listing, and payment-intent listing. If the task requires capabilities outside this domain, **stop — this is the wrong skill.** Redirect the user:
 
 - Creating invoices from documents → **contract-to-billing** skill
 - Setting up suppliers / beneficiaries → **beneficiary-creation** skill
@@ -72,16 +67,6 @@ This skill only covers Treasury/Cashflow-domain CLI commands (`balances`, `conve
 - Wire transfers → not yet available (use Airwallex Dashboard)
 - Accounting reports, reconciliation, P&L, balance sheet, or "transaction report" requests → out of scope here; explain this skill only supports cash position / receivables / obligations / indicative FX
 - Ad-hoc tasks outside cashflow workflow → **awx-best-practices** skill (fallback)
-
-## Prerequisites
-
-- `airwallex` CLI installed and on PATH
-- Authenticated via `airwallex auth login` (check with `airwallex auth whoami`)
-- Environment: sandbox by default. For production, log in with `airwallex auth login --prod`. The environment is locked to the authenticated session — there is no per-command override.
-- **Verify commands before use:** Run `airwallex --tree --compact <group>` (e.g., `airwallex --tree --compact balances`) to confirm the subcommand exists. For write commands, run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex global-accounts create --api-schema-only`) to get the request body schema — read every `required: true` field and include them all in the payload. For read commands, use `airwallex <resource> <action> --help` (e.g., `airwallex balances get-current --help`) to check flags.
-- **`request_id` is MANDATORY for all write commands.** Always include `"request_id"` in the JSON body for every `create` and `update` command — the API rejects writes without it. Generate a fresh UUID for each distinct operation via `uuidgen | tr '[:upper:]' '[:lower:]'` — NEVER hand-write a UUID or use sequential/patterned values like `a1b2c3d4-...`. If retrying the same logical operation after a transient/network failure, reuse the same `request_id`; only generate a new one for a distinct new operation. Action commands without a body do not take `request_id`.
-
----
 
 ## Non-negotiables
 
@@ -116,13 +101,11 @@ This skill only covers Treasury/Cashflow-domain CLI commands (`balances`, `conve
 
 - **No money-movement capability.** See the **HARD GATE** at the top of this document. Any request to convert, wire, transfer, pay, or lock a rate must be refused in the very first sentence — no preparatory work, no softeners. This rule outranks everything else.
 - **For ambiguous-intent requests, do not start the workflow until the action is confirmed.** If the user has not clearly confirmed the exact write action, stop before schema reads, auth checks, or other workflow setup that materially advances execution.
-- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed to make the API call. This applies to currencies, amounts, conversion directions, and any other field. Do NOT fill in defaults, placeholder values, or "reasonable guesses."
-- **Always fetch fresh data** — re-fetch before every step.
-- **Prefer business labels over raw IDs in user-facing output.** In summaries, tables, and explanations, show customer, supplier, merchant, or other human-readable business labels instead of raw system IDs whenever possible. Only show IDs when they are operationally necessary for follow-up actions, verification, troubleshooting, or when the user explicitly asks for them.
-- **Attachment = data source, not subject of review.** When a scenario/demo file is attached and the user asks a treasury question ("How's my cash?", "Am I okay?", "Cash.", "Do I have shortfalls?"), use **scenario mode** (see Workflow). The file provides the numbers — do NOT describe the document structure, comment on its formatting, or summarize it as a document. Extract the financial data and deliver the requested cashflow output. All conclusions must be grounded in exact amounts, named currencies, named counterparties, and dated events from the attachment.
+- **NEVER fabricate or assume missing information.** If any required field is uncertain, absent, or ambiguous — STOP and ask the user. Keep asking until you have every parameter needed. Do NOT fill in defaults, placeholder values, or "reasonable guesses."
+- **Always fetch fresh data** before each step.
+- **Prefer business labels over raw IDs in user-facing output.** Show customer, supplier, merchant, or other human-readable business labels instead of raw system IDs whenever possible. Only show IDs when operationally necessary or when the user asks.
 - **Broad treasury asks should default to the standard cashflow view.** When the user's request is clearly about cash position, shortfalls, exposure, coverage, or runway, give the Cash Health Briefing (or the most obvious matching deep-dive) directly instead of asking a broad "what do you want to see?" question. If horizon or home currency is not specified, default to **30 days** and **USD**, and state those assumptions explicitly. Only ask a follow-up if the user clearly wants custom framing but has left the required value ambiguous.
-- **Live-mode coverage is limited to the current surface.** Never imply that a source was checked if the current CLI/MCP surface cannot read it. If transfers, bills, card obligations, or B2C settlement data are unavailable, call the view **partial** instead of sounding complete.
-- **CLI live-mode sources** — supported sources are balances, invoices, global-account inflows, card authorizations from `issuing-transactions`, supplier bills from `spend-bills`, outbound transfers from `transfers`, scheduled conversions, and optional successful `payment-intents` as a **B2C activity proxy**. Do NOT present payment-intent activity as settled cash unless a settlement-level surface exists.
+- **Source coverage is limited to the operations that are actually available.** Never imply that a source was checked if the current surface cannot read it. Supported sources are balances, invoices, global-account inflows, card authorizations (issuing-transactions), supplier bills (spend-bills), outbound transfers, and scheduled conversions. Optional B2C activity comes from the payment-intents listing — present it as **activity** rather than settled cash unless a settlement-level surface exists. If any source is not exposed on the current surface, call the view **partial** instead of sounding complete and explicitly exclude that revenue stream from the position snapshot.
 - **Default to sandbox.** Confirm with user before any production write or conversion.
 - **Capability boundaries.** Never claim or imply the ability to: execute FX conversions, create transfers, lock rates, perform internal P&L accounting, sweep to yield/investment accounts, set up automated top-ups, or any write action. When refusing, frame it as an **architectural boundary** of the tool (not a role/permission issue). For conversions and transfers, name the Airwallex Dashboard as the place to take action. For rate locking, state clearly that **this capability does not exist anywhere** — not in this tool and not on the Airwallex Dashboard.
 - **"No action needed" must be said explicitly.**
@@ -130,100 +113,62 @@ This skill only covers Treasury/Cashflow-domain CLI commands (`balances`, `conve
 - **Always show position before proposing any conversion.**
 - **Always show rate and cost** with context (e.g., "At the current indicative rate of 1 [sell currency] = [rate] [buy currency], converting [sell amount] would give you ~[buy amount]."). Never say "locked" or "guaranteed."
 - **Show business impact after every recommendation** — what can the user do next?
-- Preserve exact amounts — no rounding.
-- Show all currencies including zero-balance with pending obligations.
+- **Preserve exact amounts** — no rounding.
+- **Show all currencies including zero-balance with pending obligations.**
 - **Never produce accounting-style outputs.** Do NOT label output as a balance sheet, P&L, reconciliation report, or transaction report. Offer supported cashflow views only: balances, receivables, obligations, runway, and indicative FX.
 - **Do not suggest the beneficiary-creation skill for obligations-view questions** like "how much do I owe?" unless the user explicitly asks to set up or pay a supplier.
 - **Do not provide forecasting or hedging advice.** You may explain current exposure and data gaps, but do not recommend a hedging strategy or say there is "nothing to hedge."
 - **Never recommend yield, investment, or automated top-up actions.** Do not suggest moving idle funds into interest-bearing products, yield accounts, or automated top-up rules — these features do not exist in this tool. Only recommend rebalancing across existing currency balances to cover obligations.
-- **Disclaimer on every response that mentions FX rates or recommends action.** Always label rates as "indicative" and append once per response: "This is informational only, not financial advice. Rates may differ at execution — please review in the Airwallex Dashboard before acting."
-- **Dry-run before every write.** Before executing any write command (POST), first run it with the `--dry-run` global flag to preview the request envelope without sending it. Show the envelope to the user (method, URL, body, environment) and get explicit approval. Only then re-run with `--confirm` to execute. The two-step sequence is: (1) `airwallex --dry-run <command>` → show preview → user approves → (2) `airwallex --confirm <command>` → execute. **Never skip the dry-run step for write operations.**
-- **Positional IDs, not `--id`.** E.g., `beneficiaries get <ID>`, `spend-bills get <ID>`. Never pass `--id` as a flag.
-- Commands with an object body (`create`, `update`) use `--data-file`, `--data`, or `--data-stdin`. Some action commands take only positional IDs with no body flags; others accept both. Always check the schema.
-- **JSON output is the default.** Use `--compact` only if you need single-line JSON output, and place it immediately after `airwallex`: `airwallex --compact balances get-current`. Do NOT put it after the action (`airwallex balances get-current --compact`).
+- **Disclaimer on every response that mentions FX rates or recommends action.** Always label rates as "indicative" and include once per response (before the 6e menu, or inside 6b–6d): "This is informational only, not financial advice. Rates may differ at execution — please review in the Airwallex Dashboard before acting." Never place this **after** the 6e menu — that block is only the four numbered options, nothing following them.
+- **Write safety.** This skill is almost entirely read-only. If a write is needed (e.g., a hypothetical global-account create outside the normal cashflow read flow), show the full payload to the user and get confirmation before executing.
 
 ### FX rate & conversion constraints
 
-- **FX rates are read-only.** Use `conversion-rates get-current` to retrieve indicative rates. Do NOT use `quotes create` — the Quote endpoint is not available in this flow. **There is no "lock a rate" action anywhere — not in this tool, not on the Airwallex Dashboard.** The Airwallex Dashboard supports executing conversions at the prevailing market rate, but there is no separate lock/quote-then-execute flow. Never suggest "create a quote and then finalize it on the Airwallex Dashboard" — that workflow does not exist. **Never use the word "lock" in relation to FX rates.** Do not say "lock in", "help you lock", "secure the rate", or any phrasing that implies you can guarantee or reserve an exchange rate. The very first mention of rate locking in any response must be a disclaimer that this capability does not exist here. After that refusal, talk only about **indicative rates** and **Airwallex Dashboard execution** — do not keep echoing the user's lock wording.
+- **FX rates are read-only.** Use the FX-rate lookup operation; indicative rates only.
+- **There is no "lock a rate" action anywhere — not in this tool, not on the Airwallex Dashboard.** The Airwallex Dashboard executes conversions at the prevailing market rate; there is no separate lock/quote-then-execute flow. Never suggest "create a quote and then finalize it on the Airwallex Dashboard" — that workflow does not exist. **Never use the word "lock" in relation to FX rates** (no "lock in", "help you lock", "secure the rate", or any phrasing that implies you can guarantee a rate). The very first mention of rate locking in any response must be a disclaimer that this capability does not exist here; after that refusal, talk only about **indicative rates** and **Airwallex Dashboard execution** — do not keep echoing the user's lock wording.
 - **`sell_amount` vs `buy_amount`** — when fetching rates, specify one (not both). The API calculates the other.
-- **`conversion_date` only supports near-term dates** (T+0 to T+2 business days). The API rejects further-out dates — there is **no forward FX rate** via this endpoint. For forward rate analysis, tell the user this data is not available via the Airwallex API. Omit `conversion_date` for spot rates.
+- **`conversion_date` only supports near-term dates** (T+0 to T+2 business days). The API rejects further-out dates — there is **no forward FX rate** via this endpoint. Omit `conversion_date` for spot rates.
 - **Sandbox `amount_above_limit`** — sandbox rejects large FX rate requests. Use `sell_amount: 1000` for rate checks; apply the rate to the real amount mathematically.
-- **Conversion amendments only for unsettled** — once status is `SETTLED`, conversions are immutable.
-- **`conversions create` not available via CLI** — conversions must be executed in the **Airwallex Dashboard**.
-- **`conversion-amendments create` not available via CLI** — `create-quote` (preview cost) IS available. Execute cancellation in the **Airwallex Dashboard**. Use `conversion-amendments list` to verify status.
-- **Pagination varies by command (minimum `--page-size` is 10 for all commands that support it):** `invoices list` uses cursor `--page` + `--page-size` (pass `page_after` to `--page`). `conversions list` uses `--page-num` + `--page-size` (0-based, increment while `has_more`). `global-accounts list` uses cursor `--page` + `--page-size`. `issuing-transactions list` uses cursor `--page` + `--page-size` (max 100). **`spend-bills list` uses cursor `--page` ONLY — it does NOT support `--page-size` (the CLI will error with "No such option"). Always run `--help` before assuming pagination flags.**
-- **`balances list-history`:** When using `--page-num` pagination, the `--from`/`--to` date range is **capped at 7 days** — the API rejects wider ranges. This is a balance-history API window limit, not the cashflow horizon; 30-day or weekly cashflow views should combine invoices, bills, transfers, card obligations, scheduled conversions, and other supported sources. To retrieve history beyond 7 days with `--page-num`, window into consecutive ≤7-day chunks. Alternatively, use `--page` cursor pagination: passing `--page 0` overrides the 7-day default for null date ranges, enabling a complete walk through all balance records without date filters. Do NOT combine `--page` and `--page-num` in the same call — the CLI rejects it.
+- **Conversion amendments only for unsettled** — once status is `SETTLED`, conversions are immutable. (Execution / cancellation happens in the Airwallex Dashboard; see **HARD GATE** and **Phase 4**.)
 
 ---
 
 ## Workflow
 
-### Mode selection — decide BEFORE doing anything else
+### Workflow steps
 
-| Condition | Mode |
-| --- | --- |
-| User attached a scenario file, demo brief, spreadsheet, or PDF | **Scenario mode** |
-| No attachment, or user explicitly asks for live account data | **Live mode** |
+**Step 1 — Time horizon + home currency.** For broad or shorthand asks, default to **30 days** and **USD**. **Always label defaults explicitly in the output**, e.g.: "Using 30-day horizon and USD as home currency (let me know if you'd like different settings)." Ask only if the user explicitly wants a custom framing but has not provided the needed value. Skip for standalone rate checks.
 
-If an attachment exists AND the user also asks to compare with live data, run scenario mode first, then live mode, and label each data set clearly.
+**Step 2 — Current balances.** Per-currency Available balance — via the balances lookup operation.
 
----
+**Step 3 — Receivables (money in).** Build money-in from the available sources:
 
-### Scenario mode (attachment present)
+- **Unpaid finalized invoices** — list billing invoices filtered to `status: FINALIZED`, `payment_status: UNPAID`.
+- **Global-account inflows.** Two-step:
+  1. List global accounts and filter to those with `status: ACTIVE` AND a real `account_number` (not empty, null, or `"-"`).
+  2. For each eligible account, fetch transactions from the horizon start. The transactions endpoint has no status filter — pull everything and filter client-side for `PENDING` (expected inflow) and `SETTLED` (landed); exclude `REJECTED` and `CANCELLED`. Skip non-ready accounts (`PROCESSING`, `FAILED`, `CLOSED`, or placeholder-number accounts) and call them out in the output. If a single account's fetch fails, skip it, keep going, and mark global-account inflows as **partial** instead of aborting.
+- **Optional B2C activity** — list payment-intents filtered to `status: SUCCEEDED`. Always label as **activity** rather than settled cash unless a settlement-level operation exists. If payment-intents is not exposed on the current surface, exclude this stream and say so.
 
-**S1 — Extract the ledger.** Read the attachment in full. Ignore any non-financial content (titles, instructions, commentary) — only extract the numbers. Never review or critique the document itself. Pull out every financial data point into a structured ledger:
-- Balances per currency (available, reserved)
-- Receivables (counterparty name, amount, currency, due date)
-- Obligations — **all types**: scheduled payouts/transfers, supplier payments, card authorizations (AUTHORIZED), scheduled conversions
-- Any other dated cash event
-
-This ledger is your **sole ground truth** for balances, receivables, and obligations. Do NOT replace these numbers with live CLI/MCP data.
-
-**S2 — Fill gaps only.** The only live-data calls allowed in scenario mode:
-- `auth whoami` (pre-flight)
-- `conversion-rates get-current` (indicative FX rates not in the attachment)
-
-Do NOT call `balances get-current`, `invoices list`, `issuing-transactions list`, or any other data-fetch command — the scenario provides that data, and live API data will contradict it.
-
-**S3 — Time horizon + home currency.** For broad or shorthand asks, default to **30 days** and **USD**. **Always label defaults explicitly in the output**, e.g.: "Using 30-day horizon and USD as home currency (let me know if you'd like different settings)." Ask only if the user explicitly wants a custom framing but has not provided the needed value. Use dates from the scenario to anchor "today."
-
-**S4 — Build tables.** Construct "Money coming in" and "Money going out" from the ledger (see table rules below). Then continue to Step 6 (Cash Health Briefing).
-
-**S-verify** — Before presenting: scan every counterparty name and amount in your output. If any name or number cannot be traced back to the attachment, you have drifted to live data — stop and redo from the ledger.
-
----
-
-### Live mode (no attachment)
-
-**L1 — Pre-flight.** Run `auth whoami`. If it fails (no active session), ask the user which environment (sandbox/production). Once the user answers, **immediately execute** `airwallex auth login` (or `airwallex auth login --prod` for production) yourself — do NOT tell the user to run it manually. The command triggers a browser-based OAuth flow; the user completes sign-in in their browser. After the command returns, confirm the session with `auth whoami`. If it succeeds on the first check, tell the user the current environment. No `auth refresh` command — on 401, retry the real command first (auto-refresh); if retry also fails, ask environment and **execute `auth login` yourself**.
-
-**L2 — Time horizon + home currency.** For broad or shorthand asks, default to **30 days** and **USD**. **Always label defaults explicitly in the output**, e.g.: "Using 30-day horizon and USD as home currency (let me know if you'd like different settings)." Ask only if the user explicitly wants a custom framing but has not provided the needed value. Skip for standalone rate checks.
-
-**L3 — Fetch current balances.** Per-currency Available balance.
-
-**L4 — Fetch receivables (money in).** Build money-in from the supported sources on the current surface:
-- Unpaid finalized invoices (`invoices list --status FINALIZED --payment-status UNPAID`)
-- Incoming global-account transactions / inflows. Fetch procedure: (1) `global-accounts list --status ACTIVE` to get eligible accounts, then filter to those with a real `account_number` (not empty, null, or `"-"`). (2) For each eligible account, `global-accounts list-transactions <ID> --from-created-at <horizon_start>` to fetch transactions — the command has no `--status` flag, so filter client-side for `status: PENDING` (expected inflow) and `status: SETTLED` (landed inflow); exclude `REJECTED` and `CANCELLED`. Skip non-ready accounts (`PROCESSING`, `FAILED`, `CLOSED`, or placeholder-number accounts) and state in the output that they were excluded from global-account inflows. If a single eligible account's transaction fetch fails, skip that account, keep fetching the rest, and mark global-account inflows as **partial** instead of aborting the workflow.
-- Optional B2C payment activity via successful `payment-intents`, clearly labelled as **activity** rather than settled cash unless a settlement-level surface exists
 Filter by due date within horizon and flag overdue invoices at top. Never count payment activity as settled cash unless the surface explicitly provides settlement-level data.
 
-**L5 — Fetch obligations (money out).** Build money-out from all supported outgoing-cash sources within the horizon:
-- Card authorizations from `issuing-transactions list --status AUTHORIZED` (use exactly this status value — pending holds)
-- Supplier bills from `spend-bills` in cash-out states: `AWAITING_PAYMENT`, `PAYMENT_IN_PROGRESS`, `SCHEDULED` (complete list of pending-obligation statuses — other statuses like `DRAFT`, `AWAITING_APPROVAL`, `PAID`, `REJECTED` are not cash-out obligations). To resolve vendor names: use `spend-vendors get <vendor_id>` (NOT `spend-bills get-vendor` — that command does not exist). The `vendor_id` field on each bill maps to the `spend-vendors` endpoint, not to `beneficiaries`.
-- Outbound transfers / payouts from `transfers`, using non-final statuses: `IN_APPROVAL`, `SCHEDULED`, `OVERDUE`, `PROCESSING`, `SENT` (these represent pending outflows — final statuses `PAID`, `FAILED`, `CANCELLED` are excluded)
-- Scheduled conversions (`conversions list --status SCHEDULED`)
+**Step 4 — Obligations (money out).** Build money-out from all available outgoing-cash sources within the horizon:
+
+- **Card authorizations** from issuing-transactions filtered to `status: AUTHORIZED` (pending holds). Use exactly that status string.
+- **Supplier bills** from spend-bills in cash-out states: `AWAITING_PAYMENT`, `PAYMENT_IN_PROGRESS`, `SCHEDULED`. Other statuses (`DRAFT`, `AWAITING_APPROVAL`, `PAID`, `REJECTED`) are not cash-out obligations. Resolve vendor names via the spend-vendors lookup matching on the bill's `vendor_id` — do NOT use beneficiary operations for vendor lookup.
+- **Outbound transfers** from the transfers listing using non-final statuses (the exact enum values differ by surface — exclude final statuses such as `PAID`/`SETTLED`, `FAILED`, `CANCELLED`; trust the listing operation's enum).
+- **Scheduled conversions** — `status: SCHEDULED`.
 
 Filter by due/settlement date within horizon and flag items due within 48 hours. If any source is unavailable on the current surface, say the obligations view is **partial** instead of implying full coverage.
 
-**L6 — Continue to Step 6** (Cash Health Briefing).
+**Step 5 — Continue to Step 6** (Cash Health Briefing).
 
 ---
 
-### Table rules (both modes)
+### Table rules
 
 **"Money coming in"** — business labels, due dates with relative markers, overdue flagged at top. Total in home currency. **Every row must use a human-readable entity name** (e.g., "NovaTech Industries", "Sterling Partners") — never an invoice ID like "INV-xxx". If the response only has an ID, fetch the parent customer/beneficiary to resolve the name before building the table. If you include B2C payment activity without settlement data, label it separately as activity / proxy rather than mixing it into landed cash.
 
-**"Money going out"** — card nicknames/purpose, supplier/vendor names, due dates, payment type. Total in home currency. **Every row must use a human-readable entity name** (e.g., "Greenleaf Environmental", "Figma card") — never a beneficiary ID or card ID. Resolve names from related entities if needed. Include **all obligation types available from the current surface**, plus any scenario-provided obligations even if not fetchable live. If a source is unavailable, explicitly label the view as **partial** rather than implying full coverage.
+**"Money going out"** — card nicknames/purpose, supplier/vendor names, due dates, payment type. Total in home currency. **Every row must use a human-readable entity name** (e.g., "Greenleaf Environmental", "Figma card") — never a beneficiary ID or card ID. Resolve names from related entities if needed. Include **all obligation types available from the API**. If a source is unavailable, explicitly label the view as **partial** rather than implying full coverage.
 
 **Mandatory per-row fields (both tables):**
 - Entity name (customer / supplier / card label)
@@ -242,13 +187,13 @@ Three blocks: a **prose briefing** (6a-6c, no tables/headers/bullet lists), an *
 
 **6a — Opening line.** Use the user's name if known (see Tone). Otherwise start directly.
 
-**6b — Health verdict + suggested fix** (2-4 sentences): Can they pay everyone? Is anything about to go wrong? Do they need to act right now? Must include: (a) explicit horizon + home-currency statement (e.g., "Using 30-day horizon and USD as home currency"), (b) total home-currency position, (c) number of active currencies, (d) whether all **known** obligations within the horizon are covered. If the current surface is partial, say so plainly.
-- **If there's a shortfall or timing mismatch:** name the problem AND suggest the fix in one breath — e.g., "You're short [amount] for [obligation name] on [date]. You have [amount] idle in [source currency] — converting it would get you ~[amount], and topping up the rest from [backup currency] would close the gap."
+**6b — Health verdict + suggested fix** (2-4 sentences): Can they pay everyone? Is anything about to go wrong? Do they need to act right now? **The very first sentence of 6b must be the home-currency total and currency count** — e.g., "~$X across N currencies — [one-word verdict]." Do not open with rates, tables, or data-fetching commentary. After that opener, continue with: (a) explicit horizon + home-currency statement (e.g., "Using 30-day horizon and USD as home currency"), (b) whether all **known** obligations within the horizon are covered, (c) any shortfall with the inline FX rate and suggested fix. If the current surface is partial, say so plainly.
+- **If there's a shortfall or timing mismatch:** name the problem AND suggest the fix in one breath, **including the indicative FX rate fetched right now** — do not defer the rate to a follow-up offer. Fetch the rate inline and embed it: e.g., "You're short A$12,000 for Greenleaf Environmental on May 3. At the current indicative rate of 1 USD = 0.729 AUD, converting ~$16,460 USD covers it. You have $9.9M USD idle — this is a rounding error."  Never say "Want me to pull rates?" or "Shall I fetch the FX rate?" — fetch it, show it, move on.
 - **If all clear:** don't just say "you're fine" — build confidence by naming 1-2 key items that anchor the picture (e.g., "[Incoming item] lands [when], your [ongoing obligation] is running normally, and the [next major payable] isn't due for [time window].")
 
 **6c — Bottom line.** One sentence: "~[home-currency total] across [number of currencies] currencies — you're covered for the next [horizon]." or "…but [currency] needs attention before [date]."
 
-For scenario-based and shorthand asks, the briefing must cover 6a through 6d completely — skipping any block makes it incomplete.
+For shorthand asks, the briefing must cover 6a through 6d completely — skipping any block makes it incomplete.
 
 **6d — Urgency-first alerts.** For broad treasury asks, always follow the prose with a short alert block. Use **exactly** these two headings — no synonyms, no rewording (not "Needs Attention Now", "Worth Watching", "Fine", etc.):
 
@@ -267,6 +212,10 @@ Each alert line must state what is happening, the specific date/deadline, the am
 4. **Rebalancing plan** — what to convert, why, after-state per currency, and FX cost
 
 The user picks a number (or asks a follow-up); only then expand that section. If the user asks for "full detail" or "show me everything", expand all four.
+
+**This menu IS the closing.** Present the four numbered options and stop. No text before the menu asking the user what they want ("What would you like to dig into?"). No text after the menu — no open question, no disclaimer, no next-step offer. The menu is the last thing in the response, full stop.
+
+**The menu fires unconditionally** — even when shortfalls were found, even when FX rates were fetched, even when a rebalancing action was recommended inline in 6b. Finding a problem and suggesting a fix in 6b does NOT replace or delay the menu. Do NOT offer to "create quotes", "pull rates", "dig into" a specific area, or take any action — all of that belongs in 6b; the menu still closes. If the user wants to act on a recommendation, they pick the matching option.
 
 ### Deep-dive output contracts
 
@@ -298,7 +247,7 @@ Self-check before presenting #2: (a) Did I compute runway from the first date-ba
 
 Self-check before presenting #3: (a) Is every row labeled by **entity name** (customer/supplier/card purpose), NOT by invoice ID or transaction ID? (b) Does each row show **both** an absolute date AND a relative marker (e.g., "May 16 — 25 days")? (c) Are items due within 48 hours prefixed with `[URGENT]`? (d) Do both tables end with a home-currency total? (e) Is there a net summary with timing-mismatch flags?
 
-**Deep-dive #4 — Suggested action / rebalancing plan.** Open with why action is needed in business terms. For each move, show all of the following in one compact block: `sell X -> ~buy Y`, indicative rate, linked obligation, source-currency balance `before -> after`, and destination-currency balance `before -> after`. After listing the moves, add a short after-state summary for every affected currency. Then show one home-currency bottom line in `before -> after` form, with the delta explained as the estimated FX cost. Prefer `Suggested action` heading over `rebalancing plan`. If no action is needed, say so explicitly. End with a Airwallex Dashboard redirect. Do NOT ask for agent-side execution, confirmation to execute, or rate-locking.
+**Deep-dive #4 — Suggested action / rebalancing plan.** Open with why action is needed in business terms. For each move, show all of the following in one compact block: `sell X -> ~buy Y`, indicative rate, linked obligation, source-currency balance `before -> after`, and destination-currency balance `before -> after`. After listing the moves, add a short after-state summary for every affected currency. Then show one home-currency bottom line in `before -> after` form, with the delta explained as the estimated FX cost. Prefer `Suggested action` heading over `rebalancing plan`. If no action is needed, say so explicitly. End with an Airwallex Dashboard redirect. Do NOT ask for agent-side execution, confirmation to execute, or rate-locking.
 
 Expected structure for Deep-dive #4:
 
@@ -341,19 +290,19 @@ Agent-side math (no API for this):
 
 **Step 7 — Check the balance.** Which currencies have more than you need? Which don't have enough to cover upcoming payments? Is too much of your money sitting in one currency?
 
-**Step 8 — FX rate check.** Fetch indicative rates via `conversion-rates get-current`. Present with context and always label as "indicative."
+**Step 8 — FX rate check.** Fetch indicative rates. Present with context and always label as "indicative."
 
 **Step 9 — Propose action.** Follow the Deep-dive #4 output contract. Three paths: (A) No action needed — say so explicitly. (B) Single-step or (C) Multi-step — for each move show sell/buy/rate/linked obligation/after-state per currency, total FX cost, and Airwallex Dashboard redirect. Warn ≥$5K equivalent. "The rate shown is indicative and may change at execution time."
 
 ### Phase 3: Verify after execution
 
-**Step 10 — Verify and confirm (after user returns).** When the user confirms execution, fetch updated balances and the actual execution rate (via `conversions list`). Present all five parts: (1) Restatement — what was converted, amount, actual rate. (2) Obligation covered — which payment is now funded, with updated balance confirmation (e.g., "Your EUR balance is now 4,480 EUR — that covers Klaus's 5,000 EUR invoice due Friday"). (3) Source currency health — sell-side still healthy? (4) New risks — anything to watch. (5) Home-currency bottom line — one number. The confirmation must tie the new balance back to the specific obligation it was meant to fund, so the user sees the cause-and-effect clearly.
+**Step 10 — Verify and confirm (after user returns).** When the user confirms execution, fetch updated balances and the actual execution rate via the balances and FX-conversions list operations. Present all five parts: (1) Restatement — what was converted, amount, actual rate. (2) Obligation covered — which payment is now funded, with updated balance confirmation (e.g., "Your EUR balance is now 4,480 EUR — that covers Klaus's 5,000 EUR invoice due Friday"). (3) Source currency health — sell-side still healthy? (4) New risks — anything to watch. (5) Home-currency bottom line — one number. The confirmation must tie the new balance back to the specific obligation it was meant to fund, so the user sees the cause-and-effect clearly.
 
 ### Phase 4: Cancel or Amend (if needed)
 
 Only for unsettled conversions (status `SCHEDULED`).
 
-Preview cost with `conversion-amendments create-quote`. Execute cancellation in the **Airwallex Dashboard**. Verify with `conversion-amendments list`.
+Cost preview for cancellation or amendment is not available in either surface. Tell the user cost preview is unavailable and direct them to the **Airwallex Dashboard** to review and execute the cancellation or amendment. After they return, confirm the outcome by listing amendments for the conversion and checking the latest amendment's status.
 
 ---
 
@@ -378,7 +327,7 @@ Rules:
 
 ## Ongoing monitoring
 
-Default: broad treasury asks → Cash Health Briefing (Step 6). If horizon or home currency is missing, default to 30 days and USD, state those assumptions explicitly, and proceed. Scenario file attached → scenario mode.
+Default: broad treasury asks → Cash Health Briefing (Step 6). If horizon or home currency is missing, default to 30 days and USD, state those assumptions explicitly, and proceed.
 
 Routing overrides (use the closest matching intent, not exact wording):
 
@@ -391,7 +340,7 @@ Routing overrides (use the closest matching intent, not exact wording):
 | Full money-in / money-out — everything coming in and going out | Deep-dive #3 — do not stop at the menu |
 | Rebalancing — what to convert, FX position advice | Deep-dive #4 |
 | Timeline — weekly roll-up, next-few-weeks view | Weekly cashflow roll-up |
-| Standalone FX rate — current indicative rate for a currency pair | Rate check only (`conversion-rates get-current`) — label indicative |
+| Standalone FX rate — current indicative rate for a currency pair | Rate check only — see Step 8: FX rate check; label indicative |
 | Money movement — convert, wire, transfer, pay | **HARD GATE** — refuse first, then optionally offer indicative context + Airwallex Dashboard redirect |
 | Rate locking — lock a rate, secure the rate, hold the rate | **HARD GATE** — refuse first (locking unavailable anywhere, including Airwallex Dashboard), then optionally offer indicative rate for reference |
 | Accounting-report — transaction report, P&L, balance sheet, reconciliation | Out of scope — offer Deep-dive #3 or #2 instead |
@@ -401,101 +350,7 @@ Routing overrides (use the closest matching intent, not exact wording):
 
 ## Response skeletons
 
-Use these as **output templates**, not literal canned text. The illustrative examples below use fictitious data — **always replace** all names, amounts, currencies, and dates with the actual values from the current scenario or live account.
-
-**Skeleton A — broad cash-health ask**
-```
-[Opening — use name if known]
-
-Using [horizon]-day horizon and [home currency] as home currency.
-
-You have ~[home-currency total] across [number of currencies] currencies. [Verdict: all covered / shortfall in [currency]].
-[If shortfall: name it + suggest fix in one sentence.]
-[If all clear: name 1-2 anchoring items.]
-~[home-currency total] across [number of currencies] currencies — [covered for [horizon] / but [currency] needs attention before [date]].
-
-Needs attention
-- [Most urgent issue, with date, amount impact, and whether it is covered]
-
-All clear
-- [Currency]: [Healthy / Covered / Idle — plain-English explanation]
-
-Want to dig deeper?
-1. Crunch-point detail
-2. Runway per currency
-3. Obligations & receivables
-4. Rebalancing plan
-```
-
-**Skeleton B — shortfall or crunch ask**
-```
-[Opening]
-[For each currency with a shortfall or would-be shortfall:]
-  - [Currency]: [Status label]. [Available balance] available, [Obligation name] [amount] due [date].
-    [If Covered: "but [Inflow name] [amount] arrives [date] — covered."]
-    [If Action needed: "Short [gap]. Suggest converting from [source currency]."]
-[For currencies with no issues:]
-  - [Currency]: [Healthy / Idle]. [Available balance] available, [runway or "no obligations"].
-[Home-currency bottom line.]
-```
-
-**Skeleton C — money-movement refusal (conversions/transfers/payments)**
-```
-I can't execute [FX conversions / wire transfers / payments] through this tool — that needs to be done in the Airwallex Dashboard.
-
-Here's what I can tell you: [indicative rate context, position impact, or recommended amount].
-[NEVER offer to "help in sandbox" or imply transfer capability.]
-```
-
-**Skeleton C′ — money-movement refusal (rate locking)**
-```
-Rate locking isn't available — not through this tool and not on the Airwallex Dashboard. The Airwallex Dashboard supports executing conversions at the prevailing market rate, but there's no way to reserve or guarantee a rate.
-
-I can show you the current indicative rate for reference if that helps.
-[Do NOT redirect to Airwallex Dashboard for locking. Do NOT imply locking exists elsewhere.]
-```
-
-**Skeleton D — full money-in / money-out ask**
-```
-Money coming in
-| From | Amount | Type | Due | Status |
-| [Customer / counterparty] | [amount] | [invoice / payment / etc.] | [absolute date — relative marker] | [status] |
-...
-Total: ~[home-currency incoming total]
-
-Money going out
-| To / Purpose | Amount | Type | Due |
-| [Supplier / card / purpose] | [amount] | [bill / card auth / card settled / transfer] | [absolute date — relative marker] |
-...
-Total: ~[home-currency outgoing total]
-
-Net: +~[incoming total] coming in vs ~[outgoing total] going out. [Timing mismatch flag if any.]
-```
-For one-sided asks, render only the requested section (`Money coming in` or `Money going out`) with the same row-level fields and a final home-currency total.
-**Skeleton E — runway or exposure ask**
-```
-Here's the runway by currency for the next [horizon] days, based on dated inflows and obligations — not an average burn-rate estimate.
-
-Using [horizon]-day horizon and [home currency] as home currency.
-
-| Currency | Available | Incoming | Outgoing | Net | Exposure % | Runway | Status |
-| [Currency] | [available] | [incoming] | [outgoing] | [net] | [X%] | [No crunch within [horizon] / [N] days / 0 days] | [Action needed / Covered / Watch / Healthy / Idle] |
-...
-[One sentence per Action needed / Covered / Watch currency.]
-Total across all currencies: ~[home-currency total]
-```
-
-**Skeleton F — weekly timeline ask**
-```
-[Opening — health summary sentence]
-| Week | Money in | Money out | Net | Cumulative |
-| [Week range] | [incoming items or —] | [outgoing items or —] | [net for the week] | [running cumulative total] |
-| [Week range] | [incoming items or —] | [outgoing items or —] | [net for the week] | [running cumulative total] |
-| [Week range] | [incoming items or —] | [outgoing items or —] | [net for the week] | [running cumulative total] |
-Caveat: Based on known scheduled items only — unscheduled card spend or ad-hoc transfers are not included.
-[Needs attention: [short summary of the first timing gap, or "None"].]
-[Home-currency bottom line.]
-```
+Output templates for each ask shape — broad health (A), shortfall (B), money-movement refusal (C / C′), full money-in/out (D), runway / exposure (E), weekly timeline (F) — live in [references/response-templates.md](references/response-templates.md). Load that file when you need a template; treat the skeletons as scaffolds, not canned text, and always replace placeholder names/amounts/dates with real values fetched from the API.
 
 For all other response formats, follow the output contracts defined in Step 6 (Cash Health Briefing), Deep-dive #1–#4, Table rules, and Weekly cashflow roll-up above.
 
@@ -505,27 +360,33 @@ For all other response formats, follow the output contracts defined in Step 6 (C
 
 Run this checklist mentally before every response. If any item fails, fix it before sending.
 
-1. **Data source** — If an attachment is present, does every counterparty name and amount trace back to the attachment? (If not, I've drifted to live data — redo.)
-2. **Entity names** — Are all rows labelled by business entity name, not invoice/transaction/card IDs? Resolve IDs to names before presenting.
-3. **Inflow timing** — Before declaring a shortfall, did I check whether a scheduled inflow resolves it? If yes → **Covered**, not "Action needed."
-4. **Home-currency bottom line** — Does my response end with a single total-across-all-currencies number?
-5. **Refusal-first** — If money movement was requested, is my very first sentence the mandated refusal ("I can't execute…" for conversions/transfers/payments, or "Rate locking isn't available…" for lock requests), not "I can help you with that"?
-6. **Status labels** — Does every currency in a crunch/runway view have exactly one label (Action needed / Covered / Watch / Healthy / Idle)?
-7. **No lock language** — Did I avoid "lock in", "secure the rate", or anything implying I can guarantee an FX rate?
-8. **Runway** — Computed from dated events only (no months / years / `Infinite` / coverage ratios). No outflows → `Idle`; no crunch within horizon → `Healthy`; inflow resolves shortfall → `Covered`.
-9. **Dates** — Does each row show both an absolute date AND a relative marker (e.g., "[Absolute date] — [relative marker]")? Are overdue incoming items sorted to the top, items within 48h flagged `[URGENT]`, and missing dates called out explicitly when the source lacks them?
-10. **Rebalancing** — If recommending a conversion: did I show WHY (which shortfall), sell/buy/rate, before/after for every affected currency, one home-currency `before -> after` bottom line, estimated FX cost, and a Airwallex Dashboard redirect?
-11. **Coverage honesty** — If the current surface lacked transfers, bills, card obligations, or settlement-level B2C data, did I label the snapshot as partial instead of implying full coverage?
-12. **Disclaimer** — If I recommended a rebalancing move, FX conversion, or timing action, did I include the "informational only, not financial advice" disclaimer?
-13. **No unsupported features** — Did I avoid suggesting yield accounts, automated top-ups, rate locking, quote-then-execute flows, or any other capability that does not exist in this tool or on the Airwallex Dashboard?
-14. **Section headings** — Did I use the exact prescribed headings: `Needs attention` / `All clear` / `Money coming in` / `Money going out` / `Suggested action`? (No synonyms like "Critical Alerts", "Receivables", etc.)
-15. **S3 defaults stated** — Did I explicitly state the horizon and home currency in the output (e.g., "Using 30-day horizon and USD as home currency")?
-16. **Deep-dive menu (6e)** — Did I end with the four numbered deep-dive options? (Never skip this.)
+1. **Entity names** — Are all rows labelled by business entity name, not invoice/transaction/card IDs? Resolve IDs to names before presenting.
+2. **Inflow timing** — Before declaring a shortfall, did I check whether a scheduled inflow resolves it? If yes → **Covered**, not "Action needed."
+3. **Home-currency bottom line** — Does my response include a single total-across-all-currencies number in 6c? (Note: 6e is the actual close, not the bottom line.)
+4. **Refusal-first** — If money movement was requested, is my very first sentence the mandated refusal ("I can't execute…" for conversions/transfers/payments, or "Rate locking isn't available…" for lock requests), not "I can help you with that"?
+5. **Status labels** — Does every currency in a crunch/runway view have exactly one label (Action needed / Covered / Watch / Healthy / Idle)?
+6. **No lock language** — Did I avoid "lock in", "secure the rate", or anything implying I can guarantee an FX rate?
+7. **Runway** — Computed from dated events only (no months / years / `Infinite` / coverage ratios). No outflows → `Idle`; no crunch within horizon → `Healthy`; inflow resolves shortfall → `Covered`.
+8. **Dates** — Does each row show both an absolute date AND a relative marker (e.g., "[Absolute date] — [relative marker]")? Are overdue incoming items sorted to the top, items within 48h flagged `[URGENT]`, and missing dates called out explicitly when the source lacks them?
+9. **Rebalancing** — If recommending a conversion: did I show WHY (which shortfall), sell/buy/rate, before/after for every affected currency, one home-currency `before -> after` bottom line, estimated FX cost, and an Airwallex Dashboard redirect?
+10. **Coverage honesty** — If the current surface lacked transfers, bills, card obligations, or settlement-level B2C data, did I label the snapshot as partial instead of implying full coverage?
+11. **Disclaimer** — If I recommended a rebalancing move, FX conversion, or timing action, did I include the "informational only, not financial advice" disclaimer?
+12. **No unsupported features** — Did I avoid suggesting yield accounts, automated top-ups, rate locking, quote-then-execute flows, or any other capability that does not exist in this tool or on the Airwallex Dashboard?
+13. **Section headings** — Did I use the exact prescribed headings: `Needs attention` / `All clear` / `Money coming in` / `Money going out` / `Suggested action`? (No synonyms like "Critical Alerts", "Receivables", etc.)
+14. **Defaults stated** — Did I explicitly state the horizon and home currency in the output (e.g., "Using 30-day horizon and USD as home currency")?
+15. **Opening total** — Is the very first sentence of 6b the home-currency total and currency count (e.g., "~$X across N currencies")? Did I avoid opening with rates, tables, or "Let me pull…" commentary?
+16. **Deep-dive menu (6e)** — Are the four numbered options the last lines in my response? No lead-in question before them ("What do you want to dig into?"), no text after them (no disclaimer, no offer). The menu is the close — nothing else. Did I present the menu even after identifying shortfalls and recommending conversions? Finding a problem does NOT replace the menu — the fix goes in 6b, the menu still closes.
 17. **No "wallet"** — Did I use "balance" everywhere? (Never "wallet".)
 18. **Type column** — Does every table row include a payment type (invoice / bill / card auth / card settled)?
 19. **Sort order** — Are tables sorted by urgency (overdue first, then soonest due date), not alphabetically?
 
+---
+
 ## Error handling
+
+Generic patterns (401/auth, API validation, duplicates, partial writes, missing required fields) — see [awx-best-practices Error handling](../awx-best-practices/SKILL.md) and [api_traps.md](../awx-best-practices/references/api_traps.md).
+
+Domain-specific:
 
 | Situation | Action |
 | --- | --- |
@@ -534,7 +395,3 @@ Run this checklist mentally before every response. If any item fails, fix it bef
 | FX pair not supported | Suggest alternative path (e.g., `[sell currency] -> [bridge currency] -> [buy currency]`) |
 | `insufficient_funds` | Check sell-currency balance first |
 | Amendment fails | Conversion may have settled (immutable) |
-| Partial completion | Report what succeeded and failed with IDs, then ask user how to proceed |
-| Duplicate detected | Show details, let user choose |
-| 401 / auth expired | Retry command (auto-refresh). If retry also fails: ask user which environment (sandbox/production), **immediately execute** `auth login` or `auth login --prod` yourself (do NOT tell user to run it), confirm with `auth whoami`, then resume |
-| API error | Run `airwallex <resource> <action> --api-schema-only` (e.g., `airwallex conversion-rates get-current --api-schema-only`) to verify body structure |

@@ -4,13 +4,13 @@
     "name": "Airwallex"
   },
   "metadata": {
-    "description": "Airwallex plugins for billing, payouts, card issuing, and treasury management"
+    "description": "Airwallex agent skills for billing, payouts, card issuing, and treasury management"
   },
   "plugins": [
     {
       "name": "airwallex",
       "source": "./plugins/airwallex",
-      "description": "Airwallex CLI",
+      "description": "Agent skills for billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or an Airwallex MCP server.",
       "version": "0.1.0",
       "author": {
         "name": "Airwallex"
