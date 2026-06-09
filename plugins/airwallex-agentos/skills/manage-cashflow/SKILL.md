@@ -5,7 +5,7 @@ description: >
 metadata:
   author: Airwallex
   version: 0.1.0
-compatibility: Works with the Airwallex CLI (`airwallex` binary on PATH, authenticated via `airwallex auth login`) or the Airwallex MCP server (enabled and authenticated). Best results with Claude Opus.
+compatibility: Works with the Airwallex CLI (`airwallex` binary on PATH, authenticated via `airwallex auth login`) or the Airwallex MCP server (enabled and authenticated).
 ---
 
 # Manage Cashflow

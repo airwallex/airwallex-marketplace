@@ -1,0 +1,51 @@
+{
+  "name": "airwallex-agentos",
+  "version": "0.2.0",
+  "description": "Airwallex AgentOS skills for Codex \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "author": {
+    "name": "Airwallex",
+    "email": "developer.support@airwallex.com",
+    "url": "https://www.airwallex.com"
+  },
+  "homepage": "https://www.airwallex.com/docs",
+  "repository": "https://github.com/airwallex/airwallex-marketplace.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "airwallex",
+    "billing",
+    "invoices",
+    "payments",
+    "issuing",
+    "treasury",
+    "finance",
+    "codex",
+    "mcp"
+  ],
+  "interface": {
+    "displayName": "Airwallex AgentOS",
+    "shortDescription": "Billing, payouts, card issuing, and treasury workflows powered by Airwallex AgentOS.",
+    "longDescription": "Agent skills for orchestrating Airwallex financial operations \u2014 extract billing details from contracts, create beneficiaries from supplier documents, provision virtual and physical corporate cards, and aggregate multi-currency cashflow summaries. Works with the airwallex CLI or an Airwallex MCP server.",
+    "developerName": "Airwallex",
+    "category": "Finance",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://www.airwallex.com",
+    "privacyPolicyURL": "https://www.airwallex.com/privacy",
+    "termsOfServiceURL": "https://www.airwallex.com/terms",
+    "brandColor": "#FF8E3C",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "defaultPrompt": [
+      "Extract billing details from this contract and create an invoice",
+      "Create a beneficiary from this supplier document",
+      "Provision a virtual card with a $5,000 monthly limit",
+      "Show me a cashflow summary across all currencies"
+    ],
+    "screenshots": []
+  }
+}

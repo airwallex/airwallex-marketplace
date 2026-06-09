@@ -8,9 +8,17 @@
   },
   "plugins": [
     {
+      "name": "airwallex-agentos",
+      "source": "./plugins/airwallex-agentos",
+      "description": "Agent skills for billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or an Airwallex MCP server.",
+      "author": {
+        "name": "Airwallex"
+      }
+    },
+    {
       "name": "airwallex",
       "source": "./plugins/airwallex",
-      "description": "Agent skills for billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or an Airwallex MCP server.",
+      "description": "Deprecated — renamed to airwallex-agentos. Run: /plugin install airwallex-agentos",
       "author": {
         "name": "Airwallex"
       }

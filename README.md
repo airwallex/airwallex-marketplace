@@ -6,10 +6,10 @@ Agent skills for integrating Airwallex with LLMs and agent frameworks.
 
 | Plugin | Surfaces | Archetype | Description |
 | --- | --- | --- | --- |
-| [airwallex](./plugins/airwallex) | CLI + MCP | Workflow / Reference | Agent skills for Billing, Payouts, Issuing, and Treasury. Works with the `airwallex` CLI or an Airwallex MCP server. |
+| [airwallex-agentos](./plugins/airwallex-agentos) | CLI + MCP | Workflow / Reference | Agent skills for Billing, Payouts, Issuing, and Treasury. Works with the `airwallex` CLI or an Airwallex MCP server. |
 | [airwallex-dev](./plugins/airwallex-dev) | - | Integration | Developer-focused skills that generate production-ready code for Airwallex API integrations. |
 
-### airwallex - Workflow & Reference Skills
+### airwallex-agentos - Workflow & Reference Skills
 
 | Skill | Category | Description |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ Agent skills for integrating Airwallex with LLMs and agent frameworks.
 
 ### Connectors
 
-Claude Code and Cursor installations include the MCP connector automatically. If you install via `npx skills`, you will need to set up a connector separately. See the [Connectors](https://www.airwallex.com/docs/developer-tools/ai/agentos/connectors) page for options:
+Claude Code, Cursor, and Codex installations include the MCP connector automatically. If you install via `npx skills`, you will need to set up a connector separately. See the [Connectors](https://www.airwallex.com/docs/developer-tools/ai/agentos/connectors) page for options:
 
 - **CLI:** `airwallex` CLI installed and authenticated.
 - **MCP:** An Airwallex MCP server connected to your AI coding assistant.
@@ -42,14 +42,25 @@ Add the marketplace and install the plugin:
 
 ```sh
 claude plugin marketplace add https://github.com/airwallex/airwallex-marketplace
-claude plugin install airwallex@airwallex-marketplace
+claude plugin install airwallex-agentos@airwallex-marketplace
 ```
 
-> **Skill namespacing:** Installed skills are prefixed by the plugin name. To invoke a skill, use the format `/airwallex:contract-to-billing`.
+> **Skill namespacing:** Installed skills are prefixed by the plugin name. To invoke a skill, use the format `/airwallex-agentos:contract-to-billing`.
 
 ### Cursor
 
-The Airwallex plugin is available in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex** in **Cursor Settings → Plugins** to install it directly.
+The Airwallex plugin is available in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex AgentOS** in **Cursor Settings → Plugins** to install it directly.
+
+### Codex
+
+Add the marketplace and install the plugin:
+
+```sh
+codex plugin marketplace add https://github.com/airwallex/airwallex-marketplace
+codex plugin add airwallex-agentos@airwallex-marketplace
+```
+
+You can also browse and install from the Codex plugin directory (`/plugins` in the CLI). The Codex plugin uses the same skills and MCP server configuration as the Claude Code and Cursor plugins.
 
 ### npx (skills only)
 
@@ -62,6 +73,8 @@ npx skills add airwallex/airwallex-marketplace
 This installs the agent skills only and does **not** configure an Airwallex MCP server connection. If your workflow requires the MCP server, you will need to set it up separately in your client's MCP configuration. See [Connectors](#connectors) above.
 
 ---
+
+> **Upgrading from 0.1.x?** Install `airwallex-agentos` to get the renamed plugin. The old `airwallex` entry becomes a tombstone with no skills or MCP servers — uninstalling it is recommended cleanup but not a prerequisite. Update any skill invocations from `/airwallex:…` to `/airwallex-agentos:…`.
 
 After installing, make sure you have at least one of the prerequisite toolchains available (the `airwallex` CLI or an Airwallex MCP server). See [Connectors](#connectors) above.
 

@@ -1,0 +1,22 @@
+{
+  "name": "airwallex-agentos",
+  "description": "Airwallex AgentOS skills for Claude \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Airwallex",
+    "url": "https://www.airwallex.com"
+  },
+  "homepage": "https://www.airwallex.com/docs",
+  "repository": "https://github.com/airwallex/airwallex-marketplace.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "airwallex",
+    "billing",
+    "invoices",
+    "payments",
+    "issuing",
+    "treasury",
+    "cli",
+    "mcp"
+  ]
+}

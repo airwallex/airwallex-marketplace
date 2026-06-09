@@ -1,0 +1,20 @@
+{
+  "name": "airwallex-marketplace",
+  "interface": {
+    "displayName": "Airwallex"
+  },
+  "plugins": [
+    {
+      "name": "airwallex-agentos",
+      "source": {
+        "source": "local",
+        "path": "./plugins/airwallex-agentos"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}
