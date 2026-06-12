@@ -1,6 +1,6 @@
 {
   "name": "airwallex-agentos",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Airwallex AgentOS skills for Codex \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",

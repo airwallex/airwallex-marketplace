@@ -47,7 +47,7 @@ Aggregates balances, receivables, obligations, and FX exposure. Proposes rebalan
 - If you know the user's name, use it (e.g., "Hey [First name] —"). Personalise the opening.
 - Lead with a plain-English health summary, not a table. Tables and breakdowns come only in deep-dives.
 - Stay in the user's world — say "you're short [amount] for [obligation name]" not "[currency] net exposure is under-funded by [amount]." Never use jargon the user didn't use first.
-- Prefer entrepreneur-facing headings: `Money coming in`, `Money going out`, `Needs attention`, `All clear`, `Suggested action` — not `receivables table`, `obligations by currency`, or `rebalancing matrix`, unless the user explicitly asks for technical detail.
+- Prefer entrepreneur-facing headings: `Money coming in`, `Money going out`, `Needs attention`, `All clear`, `Current position` — not `receivables table`, `obligations by currency`, or `rebalancing matrix`, unless the user explicitly asks for technical detail.
 
 ## When to use
 
@@ -95,7 +95,7 @@ This skill only covers Treasury/Cashflow-domain operations — current and histo
 **Section headings** must be used verbatim — no synonyms or rewordings:
 - `Needs attention` / `All clear`
 - `Money coming in` / `Money going out`
-- `Suggested action`
+- `Current position`
 
 ### Operational rules
 
@@ -129,7 +129,7 @@ This skill only covers Treasury/Cashflow-domain operations — current and histo
 - **`sell_amount` vs `buy_amount`** — when fetching rates, specify one (not both). The API calculates the other.
 - **`conversion_date` only supports near-term dates** (T+0 to T+2 business days). The API rejects further-out dates — there is **no forward FX rate** via this endpoint. Omit `conversion_date` for spot rates.
 - **Sandbox `amount_above_limit`** — sandbox rejects large FX rate requests. Use `sell_amount: 1000` for rate checks; apply the rate to the real amount mathematically.
-- **Conversion amendments only for unsettled** — once status is `SETTLED`, conversions are immutable. (Execution / cancellation happens in the Airwallex Dashboard; see **HARD GATE** and **Phase 4**.)
+- **Conversion amendments only for unsettled** — once status is `SETTLED`, conversions are immutable. (Execution / cancellation happens in the Airwallex Dashboard; see **HARD GATE**.)
 
 ---
 
@@ -247,32 +247,32 @@ Self-check before presenting #2: (a) Did I compute runway from the first date-ba
 
 Self-check before presenting #3: (a) Is every row labeled by **entity name** (customer/supplier/card purpose), NOT by invoice ID or transaction ID? (b) Does each row show **both** an absolute date AND a relative marker (e.g., "May 16 — 25 days")? (c) Are items due within 48 hours prefixed with `[URGENT]`? (d) Do both tables end with a home-currency total? (e) Is there a net summary with timing-mismatch flags?
 
-**Deep-dive #4 — Suggested action / rebalancing plan.** Open with why action is needed in business terms. For each move, show all of the following in one compact block: `sell X -> ~buy Y`, indicative rate, linked obligation, source-currency balance `before -> after`, and destination-currency balance `before -> after`. After listing the moves, add a short after-state summary for every affected currency. Then show one home-currency bottom line in `before -> after` form, with the delta explained as the estimated FX cost. Prefer `Suggested action` heading over `rebalancing plan`. If no action is needed, say so explicitly. End with an Airwallex Dashboard redirect. Do NOT ask for agent-side execution, confirmation to execute, or rate-locking.
+**Deep-dive #4 — Current position.** State the facts: which currencies have enough to cover their obligations, which don't, and where idle funds sit. Do not tell the user what they "should" or "need to" do. For each currency that is short, state the current balance, the obligation that would put it in the red, the size of the gap, and — if another currency holds sufficient idle funds — the indicative exchange rate that could bridge it. Show each such conversion scenario in a compact block: `sell X -> ~buy Y`, indicative rate, the obligation it relates to, source-currency balance `before -> after`, and destination-currency balance `before -> after`. After the scenarios, add a short after-state summary for every affected currency and one home-currency bottom line in `before -> after` form, with the delta noted as the approximate FX cost. Use the heading `Current position`. If balances already cover all obligations, say so plainly. Do NOT ask for agent-side execution, confirmation to execute, or rate-locking.
 
 Expected structure for Deep-dive #4:
 
 ```
-Suggested action
+Current position
 
-[1–2 sentences: which currency is short, which obligation drives it, and where the idle funds are]
+You have [amount] [ccy-A] and [amount] [ccy-B]. [Obligation name] ([amount] [ccy-B], due [date]) would leave [ccy-B] short by [gap]. Your [ccy-A] balance could cover this at today's indicative rate of 1 [ccy-A] = [rate] [ccy-B].
 
-Move [N] — Sell [amount sell-ccy] → ~[amount buy-ccy] (indicative rate: 1 [sell-ccy] = [rate] [buy-ccy])
-  Funds: [obligation name] [amount] [type], due [date]
-  [sell-ccy] balance: [before] → [after]
-  [buy-ccy] balance: [before] → ~[after]
+If converted — Sell [amount ccy-A] → ~[amount ccy-B] (indicative rate: 1 [ccy-A] = [rate] [ccy-B])
+  Relates to: [obligation name] [amount] [type], due [date]
+  [ccy-A] balance: [before] → [after]
+  [ccy-B] balance: [before] → ~[after]
 
-[Repeat for additional moves]
+[Repeat for additional shortfalls]
 
-After-state: [sell-ccy] — [after], [status]. [buy-ccy] — ~[after], [status + buffer note].
+After-state (if converted): [ccy-A] — [after], [status]. [ccy-B] — ~[after], [status + buffer note].
 
-Bottom line: ~[home-ccy total before] → ~[home-ccy total after] (est. FX cost ~[delta])
+Bottom line: ~[home-ccy total before] → ~[home-ccy total after] (approx. FX cost ~[delta])
 
-Head to the Airwallex Dashboard to execute.
+You can review and execute conversions in the Airwallex Dashboard.
 
-This is informational only, not financial advice. Actual rates may differ at execution time.
+This is informational only, not financial advice. Indicative rates may differ at execution time.
 ```
 
-Self-check before presenting #4: (a) Does the plan open with WHY rebalancing is needed (which shortfalls)? (b) Does each move show sell amount, buy amount, indicative rate, and the specific obligation it funds? (c) Is there an explicit before/after for every affected currency? (d) Is the total FX cost shown as a home-currency delta? (e) Did I direct the user to execute in the Airwallex Dashboard? (f) Did I use the heading `Suggested action` (not "Rebalancing Plan")?
+Self-check before presenting #4: (a) Does it state balances, obligations, and shortfalls as facts — no "you should" or "we recommend"? (b) Are conversion scenarios presented as what-if statements, not instructions? (c) Does each scenario show sell amount, buy amount, indicative rate, and the obligation it relates to? (d) Is there an explicit before/after for every affected currency? (e) Is the FX cost shown as a home-currency delta? (f) Did I leave the decision and execution to the user via the Airwallex Dashboard? (g) Did I use the heading `Current position` and include the disclaimer?
 
 **"Should I convert now?" guidance.** When the user asks about FX timing, fetch the current indicative rate, compare it against their obligation amount and deadline, and frame the decision: state the current rate, the converted amount it would yield, and whether that covers the obligation. Do NOT recommend a specific timing — present the numbers and let the user decide.
 
@@ -286,23 +286,13 @@ Agent-side math (no API for this):
 5. Timing matters — don't collapse to net-by-horizon.
 6. If any obligation source is unavailable on the current surface, carry that caveat into the output and name the missing source(s).
 
-### Phase 2: Analyze & Recommend
+### Phase 2: Analyze
 
 **Step 7 — Check the balance.** Which currencies have more than you need? Which don't have enough to cover upcoming payments? Is too much of your money sitting in one currency?
 
 **Step 8 — FX rate check.** Fetch indicative rates. Present with context and always label as "indicative."
 
-**Step 9 — Propose action.** Follow the Deep-dive #4 output contract. Three paths: (A) No action needed — say so explicitly. (B) Single-step or (C) Multi-step — for each move show sell/buy/rate/linked obligation/after-state per currency, total FX cost, and Airwallex Dashboard redirect. Warn ≥$5K equivalent. "The rate shown is indicative and may change at execution time."
-
-### Phase 3: Verify after execution
-
-**Step 10 — Verify and confirm (after user returns).** When the user confirms execution, fetch updated balances and the actual execution rate via the balances and FX-conversions list operations. Present all five parts: (1) Restatement — what was converted, amount, actual rate. (2) Obligation covered — which payment is now funded, with updated balance confirmation (e.g., "Your EUR balance is now 4,480 EUR — that covers Klaus's 5,000 EUR invoice due Friday"). (3) Source currency health — sell-side still healthy? (4) New risks — anything to watch. (5) Home-currency bottom line — one number. The confirmation must tie the new balance back to the specific obligation it was meant to fund, so the user sees the cause-and-effect clearly.
-
-### Phase 4: Cancel or Amend (if needed)
-
-Only for unsettled conversions (status `SCHEDULED`).
-
-Cost preview for cancellation or amendment is not available in either surface. Tell the user cost preview is unavailable and direct them to the **Airwallex Dashboard** to review and execute the cancellation or amendment. After they return, confirm the outcome by listing amendments for the conversion and checking the latest amendment's status.
+**Step 9 — State the position.** Follow the Deep-dive #4 output contract. Three paths: (A) All obligations are covered — state that plainly. (B) One or (C) multiple currencies are short — for each, state the current balance, the obligation that would put it in the red, the size of the gap, and the indicative exchange rate from a currency with sufficient idle funds. Show before-and-after balances per currency and the approximate FX cost. Flag conversions ≥$5K equivalent. "This is informational only, not financial advice. Indicative rates may differ at execution time."
 
 ---
 
@@ -338,13 +328,12 @@ Routing overrides (use the closest matching intent, not exact wording):
 | Receivables-only — who owes money, what's coming in | `Money coming in` only — customer names, absolute + relative dates, home-currency total |
 | Obligations-only — what bills are due, what's going out | `Money going out` only — vendor/card labels, due dates, home-currency total |
 | Full money-in / money-out — everything coming in and going out | Deep-dive #3 — do not stop at the menu |
-| Rebalancing — what to convert, FX position advice | Deep-dive #4 |
+| Rebalancing — what to convert, FX position | Deep-dive #4 |
 | Timeline — weekly roll-up, next-few-weeks view | Weekly cashflow roll-up |
 | Standalone FX rate — current indicative rate for a currency pair | Rate check only — see Step 8: FX rate check; label indicative |
 | Money movement — convert, wire, transfer, pay | **HARD GATE** — refuse first, then optionally offer indicative context + Airwallex Dashboard redirect |
 | Rate locking — lock a rate, secure the rate, hold the rate | **HARD GATE** — refuse first (locking unavailable anywhere, including Airwallex Dashboard), then optionally offer indicative rate for reference |
 | Accounting-report — transaction report, P&L, balance sheet, reconciliation | Out of scope — offer Deep-dive #3 or #2 instead |
-| Amendment — cancel or amend an unsettled conversion | Phase 4 |
 
 ---
 
@@ -368,11 +357,11 @@ Run this checklist mentally before every response. If any item fails, fix it bef
 6. **No lock language** — Did I avoid "lock in", "secure the rate", or anything implying I can guarantee an FX rate?
 7. **Runway** — Computed from dated events only (no months / years / `Infinite` / coverage ratios). No outflows → `Idle`; no crunch within horizon → `Healthy`; inflow resolves shortfall → `Covered`.
 8. **Dates** — Does each row show both an absolute date AND a relative marker (e.g., "[Absolute date] — [relative marker]")? Are overdue incoming items sorted to the top, items within 48h flagged `[URGENT]`, and missing dates called out explicitly when the source lacks them?
-9. **Rebalancing** — If recommending a conversion: did I show WHY (which shortfall), sell/buy/rate, before/after for every affected currency, one home-currency `before -> after` bottom line, estimated FX cost, and an Airwallex Dashboard redirect?
+9. **Position & shortfall** — If a currency is short: did I state the current balance, the obligation creating the gap, the gap amount, and the indicative rate from a currency with idle funds? Did I show before/after balances per affected currency, one home-currency `before -> after` bottom line, and estimated FX cost?
 10. **Coverage honesty** — If the current surface lacked transfers, bills, card obligations, or settlement-level B2C data, did I label the snapshot as partial instead of implying full coverage?
-11. **Disclaimer** — If I recommended a rebalancing move, FX conversion, or timing action, did I include the "informational only, not financial advice" disclaimer?
+11. **Disclaimer** — If I stated a shortfall, conversion scenario, or indicative rate, did I include the "informational only, not financial advice; indicative rates may differ at execution time" disclaimer?
 12. **No unsupported features** — Did I avoid suggesting yield accounts, automated top-ups, rate locking, quote-then-execute flows, or any other capability that does not exist in this tool or on the Airwallex Dashboard?
-13. **Section headings** — Did I use the exact prescribed headings: `Needs attention` / `All clear` / `Money coming in` / `Money going out` / `Suggested action`? (No synonyms like "Critical Alerts", "Receivables", etc.)
+13. **Section headings** — Did I use the exact prescribed headings: `Needs attention` / `All clear` / `Money coming in` / `Money going out` / `Current position`? (No synonyms like "Critical Alerts", "Receivables", etc.)
 14. **Defaults stated** — Did I explicitly state the horizon and home currency in the output (e.g., "Using 30-day horizon and USD as home currency")?
 15. **Opening total** — Is the very first sentence of 6b the home-currency total and currency count (e.g., "~$X across N currencies")? Did I avoid opening with rates, tables, or "Let me pull…" commentary?
 16. **Deep-dive menu (6e)** — Are the four numbered options the last lines in my response? No lead-in question before them ("What do you want to dig into?"), no text after them (no disclaimer, no offer). The menu is the close — nothing else. Did I present the menu even after identifying shortfalls and recommending conversions? Finding a problem does NOT replace the menu — the fix goes in 6b, the menu still closes.
