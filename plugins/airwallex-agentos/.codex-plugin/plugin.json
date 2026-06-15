@@ -1,7 +1,7 @@
 {
   "name": "airwallex-agentos",
-  "version": "0.2.1",
-  "description": "Airwallex AgentOS skills for Codex \u2014 billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or the Airwallex MCP server.",
+  "version": "0.2.2",
+  "description": "Bring Airwallex's global financial infrastructure to Codex. Orchestrate actions across your account in plain language, e.g., set up invoices from a PO, onboard suppliers from invoices, and check current cash position across currencies. AgentOS bundles pre-built finance Skills with MCP servers. A public CLI connects your agent to Airwallex's capabilities.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "author": {
@@ -15,6 +15,7 @@
   "keywords": [
     "airwallex",
     "billing",
+    "business accounts",
     "invoices",
     "payments",
     "issuing",
@@ -25,8 +26,8 @@
   ],
   "interface": {
     "displayName": "Airwallex AgentOS",
-    "shortDescription": "Billing, payouts, card issuing, and treasury workflows powered by Airwallex AgentOS.",
-    "longDescription": "Agent skills for orchestrating Airwallex financial operations \u2014 extract billing details from contracts, create beneficiaries from supplier documents, provision virtual and physical corporate cards, and aggregate multi-currency cashflow summaries. Works with the airwallex CLI or an Airwallex MCP server.",
+    "shortDescription": "Bring Airwallex's global financial infrastructure to Codex.",
+    "longDescription": "Bring Airwallex's global financial infrastructure to Codex. Orchestrate actions across your account in plain language, e.g., set up invoices from a PO, onboard suppliers from invoices, and check current cash position across currencies. AgentOS bundles pre-built finance Skills with MCP servers. A public CLI connects your agent to Airwallex's capabilities.",
     "developerName": "Airwallex",
     "category": "Finance",
     "capabilities": [

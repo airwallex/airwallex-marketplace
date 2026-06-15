@@ -4,13 +4,12 @@
     "name": "Airwallex"
   },
   "metadata": {
-    "description": "Airwallex agent skills for billing, payouts, card issuing, and treasury management"
+    "description": "Bring Airwallex's global financial infrastructure to Claude"
   },
   "plugins": [
     {
       "name": "airwallex-agentos",
       "source": "./plugins/airwallex-agentos",
-      "description": "Agent skills for billing, payouts, card issuing, and treasury workflows. Works with the airwallex CLI or an Airwallex MCP server.",
       "author": {
         "name": "Airwallex"
       }
