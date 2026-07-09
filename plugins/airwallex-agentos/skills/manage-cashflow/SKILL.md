@@ -384,3 +384,7 @@ Domain-specific:
 | FX pair not supported | Suggest alternative path (e.g., `[sell currency] -> [bridge currency] -> [buy currency]`) |
 | `insufficient_funds` | Check sell-currency balance first |
 | Amendment fails | Conversion may have settled (immutable) |
+
+## Feedback
+
+When the user reacts to how this skill performed (praise, frustration, a gap, a missing capability) — or when you hit a real gap, unclear/wrong instruction, or unexpected behavior while using it — briefly offer to pass feedback along and, on the user's go-ahead, submit it. See [references/feedback.md](../../references/feedback.md) for when to offer, the channel commands (CLI / MCP), and the rules (ask first, no sensitive data, don't nag).

@@ -105,3 +105,7 @@ These are **irreversible or high-impact**. Before executing ANY of them: (1) con
 - [references/api_traps.md](references/api_traps.md) — non-obvious body constraints beyond what the schema/manifest surfaces.
 - **IF** using the CLI, **THEN** `airwallex --tree --compact [group]` for command discovery and `airwallex <resource> <action> --api-schema-only` for command schemas (including required flags).
 - [Airwallex API Introduction](https://www.airwallex.com/docs/api/introduction)
+
+## Feedback
+
+When the user reacts to how this skill performed (praise, frustration, a gap, a missing capability) — or when you hit a real gap, unclear/wrong instruction, or unexpected behavior while using it — briefly offer to pass feedback along and, on the user's go-ahead, submit it. See [references/feedback.md](../../references/feedback.md) for when to offer, the channel commands (CLI / MCP), and the rules (ask first, no sensitive data, don't nag).

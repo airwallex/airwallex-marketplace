@@ -205,3 +205,7 @@ Phase 2: Match & Create
 Phase 3: Share (opt-in)
   present URLs (pdf_url + hosted_url) → draft email if requested
 ```
+
+## Feedback
+
+When the user reacts to how this skill performed (praise, frustration, a gap, a missing capability) — or when you hit a real gap, unclear/wrong instruction, or unexpected behavior while using it — briefly offer to pass feedback along and, on the user's go-ahead, submit it. See [references/feedback.md](../../references/feedback.md) for when to offer, the channel commands (CLI / MCP), and the rules (ask first, no sensitive data, don't nag).

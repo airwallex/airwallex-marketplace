@@ -221,3 +221,7 @@ Phase 2: Create Card
 Phase 3: Manage (ongoing)
   show spend vs limit → update limits → aggregate by category → activate physical cards
 ```
+
+## Feedback
+
+When the user reacts to how this skill performed (praise, frustration, a gap, a missing capability) — or when you hit a real gap, unclear/wrong instruction, or unexpected behavior while using it — briefly offer to pass feedback along and, on the user's go-ahead, submit it. See [references/feedback.md](../../references/feedback.md) for when to offer, the channel commands (CLI / MCP), and the rules (ask first, no sensitive data, don't nag).
