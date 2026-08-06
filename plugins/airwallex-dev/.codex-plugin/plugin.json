@@ -1,0 +1,47 @@
+{
+  "name": "airwallex-dev",
+  "version": "0.1.0",
+  "description": "Airwallex integration skills for Codex. Code-generation workflows that scaffold, configure, and wire Airwallex APIs into your project.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "author": {
+    "name": "Airwallex",
+    "email": "developer.support@airwallex.com",
+    "url": "https://www.airwallex.com"
+  },
+  "homepage": "https://www.airwallex.com/docs",
+  "repository": "https://github.com/airwallex/airwallex-marketplace.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "airwallex",
+    "integration",
+    "developer",
+    "sdk",
+    "code-generation",
+    "payments",
+    "checkout",
+    "codex",
+    "mcp"
+  ],
+  "interface": {
+    "displayName": "Airwallex Dev",
+    "shortDescription": "Build Airwallex integrations with Codex.",
+    "longDescription": "Airwallex integration skills for Codex. Generate the checkout, card element, onboarding and subscription billing code for an Airwallex integration, wired into your own project. Covers the Hosted Payment Page, Drop-in and Split Card elements, connected account KYC, and Billing Hosted Checkout, and plans card-on-file merchant-initiated flows for AI providers.",
+    "developerName": "Airwallex",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://www.airwallex.com",
+    "privacyPolicyURL": "https://www.airwallex.com/terms/privacy-policy",
+    "termsOfServiceURL": "https://www.airwallex.com/terms",
+    "brandColor": "#FF8E3C",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "defaultPrompt": [
+      "Add an Airwallex Hosted Payment Page checkout to my app",
+      "Embed the Drop-in element with Apple Pay and Google Pay",
+      "Build a custom card form with the Split Card elements",
+      "Set up a subscription with Billing Hosted Checkout and a free trial"
+    ],
+    "screenshots": []
+  }
+}

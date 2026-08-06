@@ -15,6 +15,13 @@
       }
     },
     {
+      "name": "airwallex-dev",
+      "source": "./plugins/airwallex-dev",
+      "author": {
+        "name": "Airwallex"
+      }
+    },
+    {
       "name": "airwallex",
       "source": "./plugins/airwallex",
       "description": "Deprecated — renamed to airwallex-agentos. Run: /plugin install airwallex-agentos",

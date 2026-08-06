@@ -1,0 +1,21 @@
+{
+  "name": "airwallex-dev",
+  "description": "Airwallex integration skills for Claude. Code-generation workflows that scaffold, configure, and wire Airwallex APIs into your project.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Airwallex",
+    "url": "https://www.airwallex.com"
+  },
+  "homepage": "https://www.airwallex.com/docs",
+  "repository": "https://github.com/airwallex/airwallex-marketplace.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "airwallex",
+    "integration",
+    "developer",
+    "sdk",
+    "code-generation",
+    "payments",
+    "checkout"
+  ]
+}

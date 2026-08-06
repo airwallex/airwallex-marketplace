@@ -7,7 +7,7 @@ Agent skills for integrating Airwallex with LLMs and agent frameworks.
 | Plugin | Surfaces | Archetype | Description |
 | --- | --- | --- | --- |
 | [airwallex-agentos](./plugins/airwallex-agentos) | CLI + MCP | Workflow / Reference | Agent skills for Billing, Payouts, Issuing, and Treasury. Works with the `airwallex` CLI or an Airwallex MCP server. |
-| [airwallex-dev](./plugins/airwallex-dev) | - | Integration | Developer-focused skills that generate production-ready code for Airwallex API integrations. |
+| [airwallex-dev](./plugins/airwallex-dev) | MCP | Integration | Developer-focused skills that generate production-ready code for Airwallex API integrations. |
 
 ### airwallex-agentos - Workflow & Reference Skills
 
@@ -21,9 +21,18 @@ Agent skills for integrating Airwallex with LLMs and agent frameworks.
 
 ### airwallex-dev - Integration Skills
 
+These skills work on the code in your project rather than driving conversations. Five generate integration code; `airwallex-ai-provider-card-mit` produces an implementation plan document instead.
+
+Install with `claude plugin install airwallex-dev@airwallex-marketplace` or `codex plugin add airwallex-dev@airwallex-marketplace`, after adding the marketplace as shown under [Installation](#installation).
+
 | Skill | Category | Description |
 | --- | --- | --- |
-| *(coming soon)* | Integration | Integration skills that generate code - checkout pages, webhook handlers, payment flows, and more. |
+| airwallex-hpp | Payments | Hosted Payment Page: redirect-based checkout hosted by Airwallex |
+| airwallex-dropin | Payments | Drop-in Element: embedded UI supporting multiple payment methods |
+| airwallex-split-card | Payments | Split Card Element: separate card number, expiry, and CVC inputs for full UI control |
+| airwallex-billing-checkout | Billing | Billing Hosted Checkout for subscriptions, one-off payments, and card-saving (SETUP) |
+| airwallex-kyc | Connected Accounts | Connected account KYC onboarding via embedded component or hosted link |
+| airwallex-ai-provider-card-mit | Payments | Implementation plan for card-on-file MIT flows used by AI providers (top-ups, auto-recharge, subscriptions) |
 
 ### Connectors
 
@@ -34,22 +43,25 @@ Claude Code, Cursor, and Codex installations include the MCP connector automatic
 
 ## Installation
 
-Pick the method that matches your editor or workflow. All options install the same set of agent skills.
+Pick the method that matches your editor or workflow. The two plugins install separately, so choose whichever you need.
 
 ### Claude Code
 
-Add the marketplace and install the plugin:
+Add the marketplace, then install either plugin:
 
 ```sh
 claude plugin marketplace add https://github.com/airwallex/airwallex-marketplace
 claude plugin install airwallex-agentos@airwallex-marketplace
+claude plugin install airwallex-dev@airwallex-marketplace
 ```
 
-> **Skill namespacing:** Installed skills are prefixed by the plugin name. To invoke a skill, use the format `/airwallex-agentos:contract-to-billing`.
+> **Skill namespacing:** Installed skills are prefixed by the plugin name. To invoke a skill, use the format `/airwallex-agentos:contract-to-billing` or `/airwallex-dev:airwallex-hpp`.
 
 ### Cursor
 
-The Airwallex plugin is available in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex AgentOS** in **Cursor Settings → Plugins** to install it directly.
+`airwallex-agentos` is listed in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex AgentOS** in **Cursor Settings → Plugins** to install it.
+
+`airwallex-dev` is not listed there yet, so add this marketplace by URL instead, as shown under [Claude Code](#claude-code) above.
 
 ### Codex
 
@@ -58,9 +70,10 @@ Add the marketplace and install the plugin:
 ```sh
 codex plugin marketplace add https://github.com/airwallex/airwallex-marketplace
 codex plugin add airwallex-agentos@airwallex-marketplace
+codex plugin add airwallex-dev@airwallex-marketplace
 ```
 
-You can also browse and install from the Codex plugin directory (`/plugins` in the CLI). The Codex plugin uses the same skills and MCP server configuration as the Claude Code and Cursor plugins.
+You can also browse and install from the Codex plugin directory (`/plugins` in the CLI). The Codex plugins use the same skills and MCP server configuration as the Claude Code and Cursor plugins.
 
 ### npx (skills only)
 
