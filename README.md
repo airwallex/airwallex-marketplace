@@ -61,7 +61,7 @@ claude plugin install airwallex-dev@airwallex-marketplace
 
 `airwallex-agentos` is listed in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex AgentOS** in **Cursor Settings → Plugins** to install it.
 
-`airwallex-dev` is not listed there yet, so add this marketplace by URL instead, as shown under [Claude Code](#claude-code) above.
+`airwallex-dev` is not listed there yet, so add this marketplace by URL instead: in **Cursor Settings → Plugins**, click **Import** under **Team Marketplaces** and paste `https://github.com/airwallex/airwallex-marketplace`, then install `airwallex-dev`.
 
 ### Codex
 

@@ -30,11 +30,7 @@
     "longDescription": "Bring Airwallex's global financial infrastructure to Codex. Orchestrate actions across your account in plain language, e.g., set up invoices from a PO, onboard suppliers from invoices, and check current cash position across currencies. AgentOS bundles pre-built finance Skills with MCP servers. A public CLI connects your agent to Airwallex's capabilities.",
     "developerName": "Airwallex",
     "category": "Finance",
-    "capabilities": [
-      "Interactive",
-      "Read",
-      "Write"
-    ],
+    "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "https://www.airwallex.com",
     "privacyPolicyURL": "https://www.airwallex.com/terms/privacy-policy",
     "termsOfServiceURL": "https://www.airwallex.com/terms",
