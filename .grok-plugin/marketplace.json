@@ -1,0 +1,25 @@
+{
+  "name": "airwallex-marketplace",
+  "owner": {
+    "name": "Airwallex"
+  },
+  "metadata": {
+    "description": "Bring Airwallex's global financial infrastructure to Grok"
+  },
+  "plugins": [
+    {
+      "name": "airwallex-agentos",
+      "source": "./plugins/airwallex-agentos",
+      "author": {
+        "name": "Airwallex"
+      }
+    },
+    {
+      "name": "airwallex-dev",
+      "source": "./plugins/airwallex-dev",
+      "author": {
+        "name": "Airwallex"
+      }
+    }
+  ]
+}
