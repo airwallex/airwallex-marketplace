@@ -75,6 +75,18 @@ codex plugin add airwallex-dev@airwallex-marketplace
 
 You can also browse and install from the Codex plugin directory (`/plugins` in the CLI). The Codex plugins use the same skills and MCP server configuration as the Claude Code and Cursor plugins.
 
+### Grok
+
+Add the marketplace, then install either plugin:
+
+```sh
+grok plugin marketplace add https://github.com/airwallex/airwallex-marketplace
+grok plugin install airwallex-agentos --trust
+grok plugin install airwallex-dev --trust
+```
+
+The Grok plugins use the same skills and MCP server configuration as the Claude Code, Cursor, and Codex plugins.
+
 ### npx (skills only)
 
 Install the agent skills with a single command:
