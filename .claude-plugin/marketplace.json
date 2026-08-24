@@ -10,6 +10,7 @@
     {
       "name": "airwallex-agentos",
       "source": "./plugins/airwallex-agentos",
+      "displayName": "Airwallex AgentOS",
       "author": {
         "name": "Airwallex"
       }
@@ -17,6 +18,7 @@
     {
       "name": "airwallex-dev",
       "source": "./plugins/airwallex-dev",
+      "displayName": "Airwallex Dev",
       "author": {
         "name": "Airwallex"
       }
