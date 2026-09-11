@@ -35,8 +35,6 @@ Do NOT attempt to fulfill these by aggregating API calls. State plainly that the
 
 | Request pattern | Why out of scope | Redirect |
 | --- | --- | --- |
-| "Transaction report", "all transactions this month", "ledger export" | No skill produces accounting-grade transaction reports | Offer **manage-cashflow** for cash position, receivables, obligations |
-| "Reconciliation", "P&L", "balance sheet", "accounting report" | Accounting functions outside agent capability | Same as above |
 | "Forecast", "hedging strategy", "FX prediction" | Agent provides indicative spot rates only | Offer **manage-cashflow** for current exposure and indicative FX rates |
 | "Yield", "investment advice", "idle funds", "automated top-up", "should I lock a rate?" | Financial advice or unsupported treasury action | Offer **manage-cashflow** for current balances, obligations, and informational indicative FX only |
 
@@ -54,7 +52,7 @@ See [references/surface-quickstart.md](references/surface-quickstart.md) for ful
 - **Always fetch fresh data** — re-fetch before every step.
 - **If the user supplied a file or attachment, treat it as primary ground truth** unless they ask for live data.
 - **For ambiguous-intent requests, confirm the action before starting.**
-- **Never overclaim unsupported capabilities.** Transfers, payouts, FX execution, PAN/CVV retrieval, accounting reports, reconciliation: refuse immediately, state what is not available, offer the closest alternative.
+- **Never overclaim unsupported capabilities.** Transfers, payouts, FX execution, PAN/CVV retrieval: refuse immediately, state what is not available, offer the closest alternative.
 - **Do not provide financial advice.** Never recommend yield, investment products, automated top-ups, hedging strategy, FX prediction, or rate-locking. For treasury questions, redirect to **manage-cashflow** and keep any FX discussion informational and clearly labelled as indicative.
 - **Split supported and unsupported asks.** Complete the supported portion and clearly state what was not configured.
 - **Prefer business labels over raw IDs in user-facing output.** Show human-readable business labels (customer names, product names, beneficiary names, card nicknames, etc.) instead of raw system IDs whenever possible. Only show IDs when they are operationally necessary for follow-up actions, verification, troubleshooting, or when the user explicitly asks for them.

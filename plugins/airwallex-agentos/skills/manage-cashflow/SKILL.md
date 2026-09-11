@@ -65,7 +65,6 @@ This skill only covers Treasury/Cashflow-domain operations — current and histo
 - Setting up suppliers / beneficiaries → **beneficiary-creation** skill
 - Provisioning corporate cards → **card-provisioning** skill
 - Wire transfers → not yet available (use Airwallex Dashboard)
-- Accounting reports, reconciliation, P&L, balance sheet, or "transaction report" requests → out of scope here; explain this skill only supports cash position / receivables / obligations / indicative FX
 - Ad-hoc tasks outside cashflow workflow → **awx-best-practices** skill (fallback)
 
 ## Non-negotiables
