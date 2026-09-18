@@ -59,7 +59,7 @@ claude plugin install airwallex-dev@airwallex-marketplace
 
 ### Cursor
 
-`airwallex-agentos` is listed in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex AgentOS** in **Cursor Settings → Plugins** to install it.
+`airwallex-agentos` is listed in the [Cursor Marketplace](https://cursor.com/marketplace). Search for **Airwallex** in **Cursor Settings → Plugins** to install it.
 
 `airwallex-dev` is not listed there yet, so add this marketplace by URL instead: in **Cursor Settings → Plugins**, click **Import** under **Team Marketplaces** and paste `https://github.com/airwallex/airwallex-marketplace`, then install `airwallex-dev`.
 
@@ -81,7 +81,7 @@ Add the marketplace, then install either plugin:
 
 ```sh
 grok plugin marketplace add https://github.com/airwallex/airwallex-marketplace
-grok plugin install airwallex-agentos --trust
+grok plugin install airwallex --trust
 grok plugin install airwallex-dev --trust
 ```
 

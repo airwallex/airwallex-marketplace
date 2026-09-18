@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "airwallex-agentos",
+      "name": "airwallex",
       "source": "./plugins/airwallex-agentos",
       "author": {
         "name": "Airwallex"
