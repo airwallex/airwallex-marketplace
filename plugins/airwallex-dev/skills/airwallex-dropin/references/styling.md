@@ -273,4 +273,3 @@ initPaymentPage(intentId, clientSecret, 'USD', {
 - [Drop-in — Guest user checkout](https://www.airwallex.com/docs/payments/integration-options/web-checkout/drop-in-element/guest-user-checkout)
 - [Drop-in — Save and reuse payment details](https://www.airwallex.com/docs/payments/integration-options/web-checkout/save-and-reuse-payment-details)
 - [Test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers)
-```

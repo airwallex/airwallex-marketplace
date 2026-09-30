@@ -275,7 +275,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 });
 ```
 
-> **Note**: `express.raw()` must be registered **before** `express.json()`, otherwise signature verification will fail. The sample compares signatures with `crypto.timingSafeEqual()` (guarding buffer length first) so signature validity is not leaked through response timing; a plain `sig !== expected` is timing-attack vulnerable. It also rejects deliveries older than 5 minutes (replay protection) and deduplicating by `event.id` is recommended, since the same event can be delivered more than once. Full details in [api-reference.md §8](references/api-reference.md).
+> **Note**: `express.raw()` must be registered **before** `express.json()`, otherwise signature verification will fail. The sample compares signatures with `crypto.timingSafeEqual()` (guarding buffer length first) so signature validity is not leaked through response timing; a plain `sig !== expected` is timing-attack vulnerable. It also rejects deliveries older than 5 minutes (replay protection). Deduplicating by `event.id` is recommended, since the same event can be delivered more than once. Full details in [api-reference.md §8](references/api-reference.md).
 
 ### Step 6: Testing
 

@@ -1,6 +1,6 @@
 {
   "name": "airwallex-dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Airwallex integration skills for Codex. Code-generation workflows that scaffold, configure, and wire Airwallex APIs into your project.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
