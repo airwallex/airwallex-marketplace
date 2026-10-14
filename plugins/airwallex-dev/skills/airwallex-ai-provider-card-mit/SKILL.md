@@ -17,7 +17,7 @@ Keep the solution card-only, Web JS SDK-only, and merchant-managed. Do not route
 
 Install only the Airwallex Docs MCP connector needed for documentation lookup. Use the official setup guide:
 
-https://www.airwallex.com/docs/developer-tools/ai/developer-connector.md
+https://www.airwallex.com/docs/developer-tools/ai/developer-connector
 
 ## No Embedded Code Examples In The Skill
 

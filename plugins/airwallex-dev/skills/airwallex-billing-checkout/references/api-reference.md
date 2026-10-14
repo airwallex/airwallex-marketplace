@@ -32,7 +32,7 @@ This document supplements SKILL.md with complete API schemas, Webhook event list
 All API calls require an Access Token first:
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/authentication/login \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/authentication/login \
   -H 'Content-Type: application/json' \
   -H 'x-client-id: <CLIENT_ID>' \
   -H 'x-api-key: <API_KEY>'
@@ -98,7 +98,7 @@ x-api-version: <AIRWALLEX_X_API_VERSION>
 Full example:
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/billing_checkouts/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
@@ -484,7 +484,7 @@ def create_checkout():
     }
 
     resp = requests.post(
-        'https://api-demo.airwallex.com/api/v1/billing_checkouts/create',
+        'https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create',
         json=body,
         headers={
             'Authorization': f'Bearer {token}',
@@ -540,7 +540,7 @@ app.get('/api/billing-checkout/:id', async (req, res) => {
   const apiVersion = process.env.AIRWALLEX_X_API_VERSION;
   if (!apiVersion) return res.status(500).json({ error: 'Missing AIRWALLEX_X_API_VERSION' });
   const checkout = await fetch(
-    `https://api-demo.airwallex.com/api/v1/billing_checkouts/${req.params.id}`,
+    `https://api.sandbox.airwallex.com/api/v1/billing_checkouts/${req.params.id}`,
     { headers: { Authorization: `Bearer ${accessToken}`, 'x-api-version': apiVersion } }
   );
   const data = await checkout.json();
@@ -556,7 +556,7 @@ app.get('/api/billing-checkout/:id', async (req, res) => {
 const apiVersion = process.env.AIRWALLEX_X_API_VERSION;
 if (!apiVersion) throw new Error('Missing AIRWALLEX_X_API_VERSION');
 const checkout = await fetch(
-  'https://api-demo.airwallex.com/api/v1/billing_checkouts/create',
+  'https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create',
   {
     method: 'POST',
     headers: {
@@ -835,7 +835,7 @@ POST /api/v1/coupons/create
 **Example, percentage discount for custom duration:**
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/coupons/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/coupons/create \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
@@ -854,7 +854,7 @@ curl -X POST https://api-demo.airwallex.com/api/v1/coupons/create \
 **Example, fixed amount, one-time only:**
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/coupons/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/coupons/create \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
@@ -890,13 +890,13 @@ In `POST /api/v1/billing_checkouts/create`:
 
 ```shell
 # 1) Create the coupon → response returns { "id": "coup_xxx", ... }
-curl -X POST https://api-demo.airwallex.com/api/v1/coupons/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/coupons/create \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' -H 'Content-Type: application/json' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
   -d '{ "request_id": "<UUID>", "name": "WELCOME20", "discount_model": "PERCENTAGE", "percentage_off": 20, "duration_type": "ONCE", "active": true }'
 
 # 2) Reference the returned coup_xxx in the checkout's discounts array
-curl -X POST https://api-demo.airwallex.com/api/v1/billing_checkouts/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' -H 'Content-Type: application/json' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
   -d '{
@@ -1021,7 +1021,7 @@ Before switching from Sandbox to production, verify each item:
 
 | # | Check Item | Action |
 |---|-----------|--------|
-| 1 | **API domain** | `api-demo.airwallex.com` → `api.airwallex.com` |
+| 1 | **API domain** | `api.sandbox.airwallex.com` → `api.airwallex.com` |
 | 2 | **API credentials** | Use production `CLIENT_ID` and `API_KEY` |
 | 3 | **Price IDs** | Recreate Product/Price in production, update `.env` |
 | 4 | **Coupon IDs** | If applicable, recreate in production |

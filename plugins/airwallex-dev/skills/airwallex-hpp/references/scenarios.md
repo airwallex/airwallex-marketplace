@@ -1,7 +1,7 @@
 # Airwallex Hosted Payment Page (HPP): Overview, Frontend Implementation & Scenarios
 
-> **Backend APIs** (Create Customer, Create PaymentIntent, Get Saved Methods): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md)
-> **MIT server-side & CIT vs MIT**: see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md)
+> **Backend APIs** (Create Customer, Create PaymentIntent, Get Saved Methods): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration)
+> **MIT server-side & CIT vs MIT**: see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration)
 > **Styling and doc references**: see [styling.md](styling.md)
 
 ## Table of Contents
@@ -161,7 +161,7 @@ payments.redirectToCheckout({
 User → clicks "Add payment method" → redirected to HPP → enters card → card saved → redirected back
 ```
 
-- **Backend**: Create PaymentIntent with `customer_id` and **`amount: 0`** (see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md))
+- **Backend**: Create PaymentIntent with `customer_id` and **`amount: 0`** (see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration))
 - **Frontend**: Same as Scenario B on the backend except `amount: 0`; on the frontend, add a `payment_consent` block to record the save-only intent (shown below).
 
 ```javascript
@@ -217,4 +217,4 @@ payments.redirectToCheckout({
 });
 ```
 
-> For `merchant_trigger_reason` values and subsequent MIT server-side payments, see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md).
+> For `merchant_trigger_reason` values and subsequent MIT server-side payments, see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration).

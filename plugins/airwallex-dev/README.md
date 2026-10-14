@@ -51,4 +51,4 @@ airwallex-dev/
 ## Prerequisites
 
 - **Sandbox account:** Airwallex sandbox credentials for testing generated integrations.
-- **Airwallex Developer MCP connector:** lets the agent search current API docs and call sandbox APIs. Most skills fall back to it only when a question goes beyond the bundled references, but `airwallex-ai-provider-card-mit` **requires** it and verifies every API field and SDK shape against MCP before writing them. See [Airwallex Developer MCP connector](https://www.airwallex.com/docs/developer-tools/ai/developer-connector).
+- **Airwallex Developer MCP connector:** lets the agent search current API docs and call sandbox APIs. Optional for most skills, which fall back to it only when a question goes beyond their references, but **required** by `airwallex-ai-provider-card-mit`, which verifies every API field and SDK shape against MCP before writing them. Setup: [Connectors](https://www.airwallex.com/docs/developer-tools/ai/developer-connector).

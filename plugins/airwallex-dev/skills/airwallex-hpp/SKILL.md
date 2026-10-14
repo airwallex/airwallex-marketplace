@@ -21,12 +21,11 @@ Detect the user's language. Code and API terms stay in English; comments and exp
 
 ## Reference
 
-1. Read [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md) for backend setup (Customer, PaymentIntent, Saved Methods)
+1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration) for backend setup (auth, Customer, PaymentIntent, amount format, saved methods) and for MIT/CIT flows
 2. Read [references/scenarios.md](references/scenarios.md) for HPP overview, frontend implementation, and the guest/save-card/MIT scenarios
 3. Read [references/styling.md](references/styling.md) for appearance, layout, saved-card display options, and doc references
-4. Read [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md) if user needs MIT/CIT flows
-5. Read the [test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers) doc if user needs test data
+4. Read the [test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers) doc if user needs test data
 
 ## Beyond These Docs
 
-If the user's question goes beyond what the reference files cover (e.g., advanced API parameters, alternative payment method configuration, risk rules), read [Airwallex Developer MCP connector](https://www.airwallex.com/docs/developer-tools/ai/developer-connector.md) and suggest Airwallex Developer MCP for real-time documentation search and sandbox testing.
+If the user's question goes beyond what the reference files cover (e.g., advanced API parameters, alternative payment method configuration, risk rules), suggest the [Airwallex Developer MCP](https://www.airwallex.com/docs/developer-tools/ai/developer-connector) for real-time documentation search and sandbox testing.

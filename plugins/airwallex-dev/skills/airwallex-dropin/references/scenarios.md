@@ -2,8 +2,8 @@
 
 > **Canonical source:** this file distills the official Airwallex docs: [Drop-in element](https://www.airwallex.com/docs/payments/integration-options/web-checkout/drop-in-element), [Guest user checkout](https://www.airwallex.com/docs/payments/integration-options/web-checkout/drop-in-element/guest-user-checkout), and [Save and reuse payment details](https://www.airwallex.com/docs/payments/integration-options/web-checkout/save-and-reuse-payment-details). Those pages are authoritative. Prefer them if anything here drifts.
 
-> **Backend APIs** (Create Customer, Create PaymentIntent, Get Saved Methods): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md)
-> **MIT server-side & CIT vs MIT**: see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md)
+> **Backend APIs** (Create Customer, Create PaymentIntent, Get Saved Methods): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration)
+> **MIT server-side & CIT vs MIT**: see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration)
 > **Styling and doc references**: see [styling.md](styling.md)
 
 ## Table of Contents
@@ -199,7 +199,7 @@ User → sees Drop-in on "add payment method" page → enters card
      → sees "Save card" checkbox (optional) → submits → success event fires
 ```
 
-- **Backend**: Create PaymentIntent with `customer_id` and **`amount: 0`** (see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md))
+- **Backend**: Create PaymentIntent with `customer_id` and **`amount: 0`** (see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration))
 - **Frontend**: Same as Scenario B, only `amount: 0` differs on backend.
 
 ```javascript
@@ -251,7 +251,7 @@ const element = createElement('dropIn', {
 element.mount('dropIn');
 ```
 
-> For `merchant_trigger_reason` values and subsequent MIT server-side payments, see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md).
+> For `merchant_trigger_reason` values and subsequent MIT server-side payments, see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration).
 
 ---
 

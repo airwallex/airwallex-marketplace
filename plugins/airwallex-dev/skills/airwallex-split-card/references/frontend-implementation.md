@@ -34,7 +34,7 @@ await init({
 > like JPY and KRW have no minor unit, so send the whole number as-is (`1000` for ¥1000).
 > Work the amount out from your server-side order data, not from whatever the browser
 > sends. The backend side is covered in
-> [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md).
+> [Payments integration notes](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration).
 >
 > ```javascript
 > // Send the amount in major units, e.g. $49.99:
@@ -140,9 +140,8 @@ let isLoggedIn;      // set from your auth logic (true if user has an account)
 // Initialize new card input elements
 // ============================
 function initNewCardElements() {
-  // The intent goes in a nested `intent` object. `CardNumberElementOptions` has no
-  // top-level intent_id / client_secret; those two names belong to confirm() instead,
-  // and passing them here is silently ignored.
+  // Nested `intent`, not top-level intent_id / client_secret — those belong to
+  // confirm(), and CardNumberElementOptions silently ignores them.
   cardNumber = createElement('cardNumber', {
     intent: { id: intentId, client_secret: clientSecret },
   });
@@ -193,9 +192,8 @@ function renderSavedCards(savedCards) {
     radio.name = 'payment-method';
     radio.value = method.id;
     radio.checked = index === 0;
-    // Bind the handler directly. An inline onchange="..." attribute resolves the
-    // function against `window`, which throws in a module or bundled build where
-    // onSavedCardSelected is module-scoped rather than global.
+    // Bind directly: an inline onchange="..." looks the function up on `window`,
+    // which throws in a module build.
     radio.addEventListener('change', () => onSavedCardSelected(method.id, cvcLength));
 
     // Appending strings sets text, so card values are never parsed as HTML.

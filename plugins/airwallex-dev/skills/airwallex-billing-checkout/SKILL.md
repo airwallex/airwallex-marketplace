@@ -35,7 +35,7 @@ This skill guides end-to-end integration of Airwallex **Billing Hosted Checkout*
 * **Interaction first**: When intent is unclear, ask questions per §4 before outputting content; never dump all sections at once
 * **Output strategy**: Only output sections relevant to the user's needs; use "conclusion → steps" structure
 * **Security**: Use `<PLACEHOLDER>` for sensitive values in code examples
-* **Environments**: Demo = `api-demo.airwallex.com`, Production = `api.airwallex.com`
+* **Environments**: Sandbox = `api.sandbox.airwallex.com`, Production = `api.airwallex.com`
 * **API versioning**: Minimum `x-api-version` per capability and the current latest are in [api-reference.md §2](references/api-reference.md). **Set `AIRWALLEX_X_API_VERSION` in `.env`** (template [api-reference.md §1.1](references/api-reference.md)); examples below read that value and **do not hardcode a date**, so nobody assumes one fixed version is mandatory. If you rely on the account default and omit the header, confirm the default meets the §2 minimums for what you use.
 
 ## 4. Guided Intake Workflow
@@ -105,7 +105,7 @@ Call `POST /api/v1/authentication/login` (Headers: `x-client-id` + `x-api-key`) 
 > These `curl` snippets use `AIRWALLEX_X_API_VERSION` (same as `.env`). Export it before running (`export AIRWALLEX_X_API_VERSION=...`) or load `.env` with your tooling; the value must satisfy [api-reference.md §2](references/api-reference.md) for the features you use.
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/products/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/products/create \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H 'Content-Type: application/json' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
@@ -113,7 +113,7 @@ curl -X POST https://api-demo.airwallex.com/api/v1/products/create \
 ```
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/prices/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/prices/create \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H 'Content-Type: application/json' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
@@ -136,7 +136,7 @@ Call `POST /api/v1/coupons/create`, setting `discount_model` (`PERCENTAGE`/`FLAT
 > **Field exclusivity**: `FLAT` uses `amount_off` **+** `currency`; `PERCENTAGE` uses `percentage_off` **only**. Sending `amount_off`/`currency` on a `PERCENTAGE` coupon returns `400 validation_error`; don't copy `currency` from the price onto the coupon.
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/coupons/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/coupons/create \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H 'Content-Type: application/json' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \
@@ -187,7 +187,7 @@ app.post('/create-checkout', async (req, res) => {
   }
 
   const resp = await fetch(
-    'https://api-demo.airwallex.com/api/v1/billing_checkouts/create',
+    'https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create',
     {
       method: 'POST',
       headers: {
@@ -297,7 +297,7 @@ Create Coupon in Step 1.5 → reference in Step 3 via `discounts` (Checkout-leve
 One-off invoice payment. No `subscription_data`; use `invoice_data` instead. Creates an Invoice (not a Subscription) on completion. No Free trial. Coupons are supported.
 
 ```shell
-curl -X POST https://api-demo.airwallex.com/api/v1/billing_checkouts/create \
+curl -X POST https://api.sandbox.airwallex.com/api/v1/billing_checkouts/create \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer <ACCESS_TOKEN>' \
   -H "x-api-version: ${AIRWALLEX_X_API_VERSION}" \

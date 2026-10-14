@@ -2,7 +2,7 @@
 
 > **Canonical source:** this file distills the official Airwallex docs: [Embedded KYC component](https://www.airwallex.com/docs/connected-accounts/onboarding/kyc-and-onboarding/embedded-kyc-component) (Scenario A) and [Hosted onboarding](https://www.airwallex.com/docs/connected-accounts/onboarding/kyc-and-onboarding/hosted-onboarding) (Scenario B). Those pages are authoritative. Prefer them if anything here drifts. The `theme` object in [theme.md](theme.md) is `@hidden` and has no public-doc equivalent.
 
-> **Access token** (Authentication section only): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md)
+> **Access token** (Authentication section only): see [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration)
 > **Optional embedded-component theming**: see [theme.md](theme.md)
 
 ## Table of Contents

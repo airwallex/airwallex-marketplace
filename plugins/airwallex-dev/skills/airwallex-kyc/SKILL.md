@@ -19,10 +19,10 @@ Detect the user's language. Code and API terms stay in English; comments and exp
 
 ## Reference
 
-1. Read [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md) for the access token (see the Authentication section, the rest of that file is payments-specific and not needed for KYC)
+1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration) for the access token, reading only its Authentication section. The rest of that page is payments-specific and not needed for KYC
 2. Read [references/scenarios.md](references/scenarios.md) for the overview, embedded-vs-hosted comparison, and both onboarding scenarios
 3. Read [references/theme.md](references/theme.md) only if the user wants advanced color/typography theming of the embedded component
 
 ## Beyond These Docs
 
-If the user's question goes beyond what the reference files cover (e.g., Native API onboarding, advanced connected-account parameters, risk rules), read [Airwallex Developer MCP connector](https://www.airwallex.com/docs/developer-tools/ai/developer-connector.md) and suggest Airwallex Developer MCP for real-time documentation search and sandbox testing.
+If the user's question goes beyond what the reference files cover (e.g., Native API onboarding, advanced connected-account parameters, risk rules), suggest the [Airwallex Developer MCP](https://www.airwallex.com/docs/developer-tools/ai/developer-connector) for real-time documentation search and sandbox testing.

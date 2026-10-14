@@ -168,7 +168,7 @@ payments.redirectToCheckout({
 
 ## References
 
-- [Hosted Payment Page overview](https://www.airwallex.com/docs/payments/online-payments/hosted-payment-page)
-- [HPP — Guest user checkout](https://www.airwallex.com/docs/payments/online-payments/hosted-payment-page/guest-user-checkout)
-- [HPP — Registered user checkout](https://www.airwallex.com/docs/payments/online-payments/hosted-payment-page/registered-user-checkout)
+- [Hosted Payment Page overview](https://www.airwallex.com/docs/payments/integration-options/web-checkout/hosted-payment-page)
+- [Save and reuse payment details](https://www.airwallex.com/docs/payments/integration-options/web-checkout/save-and-reuse-payment-details), which replaced the separate registered-user-checkout page
+- [Payments quickstart](https://www.airwallex.com/docs/payments/get-started/quickstart), which replaced the separate guest-user-checkout page
 - [Test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers)
