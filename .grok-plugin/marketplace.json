@@ -13,13 +13,6 @@
       "author": {
         "name": "Airwallex"
       }
-    },
-    {
-      "name": "airwallex-dev",
-      "source": "./plugins/airwallex-dev",
-      "author": {
-        "name": "Airwallex"
-      }
     }
   ]
 }
