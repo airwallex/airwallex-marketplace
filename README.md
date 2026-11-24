@@ -1,6 +1,6 @@
 # Airwallex AI
 
-Agent skills for integrating Airwallex with LLMs and agent frameworks.
+The Airwallex AgentOS plugin and standalone developer integration skills.
 
 ## Plugins
 
@@ -20,14 +20,29 @@ Agent skills for integrating Airwallex with LLMs and agent frameworks.
 
 ### Connectors
 
-Claude Code, Cursor, and Codex installations include the MCP connector automatically. If you install via `npx skills`, you will need to set up a connector separately. See the [Connectors](https://www.airwallex.com/docs/developer-tools/ai/agentos/connectors) page for options:
+AgentOS plugin installations for Claude Code, Cursor, and Codex include the MCP connector automatically. If you install via `npx skills`, you will need to set up a connector separately. See the [Connectors](https://www.airwallex.com/docs/developer-tools/ai/agentos/connectors) page for options:
 
 - **CLI:** `airwallex` CLI installed and authenticated.
 - **MCP:** An Airwallex MCP server connected to your AI coding assistant.
 
+## Developer integration skills
+
+Use these skills to guide your agent when building an Airwallex integration. Install only the skills your project needs.
+
+| Skill | Integration |
+| --- | --- |
+| [airwallex-hpp](plugins/airwallex-dev/skills/airwallex-hpp/SKILL.md) | Hosted Payment Page |
+| [airwallex-dropin](plugins/airwallex-dev/skills/airwallex-dropin/SKILL.md) | Embedded Drop-in Element |
+| [airwallex-split-card](plugins/airwallex-dev/skills/airwallex-split-card/SKILL.md) | Split Card Element |
+| [airwallex-billing-checkout](plugins/airwallex-dev/skills/airwallex-billing-checkout/SKILL.md) | Billing Hosted Checkout |
+| [airwallex-kyc](plugins/airwallex-dev/skills/airwallex-kyc/SKILL.md) | Connected account KYC onboarding |
+| [airwallex-ai-provider-card-mit](plugins/airwallex-dev/skills/airwallex-ai-provider-card-mit/SKILL.md) | AI-provider card-on-file integration plan |
+
+Developer skills are excluded from plugin catalogs and the AgentOS bundle.
+
 ## Installation
 
-Pick the method that matches your editor or workflow.
+Install AgentOS as a plugin for your client, or install skills with [`npx`](#npx-skills-only).
 
 ### Claude Code
 
@@ -68,17 +83,24 @@ The Grok plugins use the same skills and MCP server configuration as the Claude 
 
 ### npx (skills only)
 
-Install the agent skills with a single command:
+Browse and install skills from this repository:
 
 ```sh
 npx skills add airwallex/airwallex-marketplace
 ```
 
-This installs the agent skills only and does **not** configure an Airwallex MCP server connection. If your workflow requires the MCP server, you will need to set it up separately in your client's MCP configuration. See [Connectors](#connectors) above.
+To select only developer integration skills:
 
----
+```sh
+npx skills add airwallex/airwallex-marketplace/plugins/airwallex-dev
+```
 
-After installing, make sure you have at least one of the prerequisite toolchains available (the `airwallex` CLI or an Airwallex MCP server). See [Connectors](#connectors) above.
+Select your skills and agent in the installer; choose all six to install the full developer skill set. Add `-g` to install across your projects.
+
+The installer copies instructions and references only; it does not configure MCP connections.
+
+- **AgentOS workflows:** Set up the `airwallex` CLI or an Airwallex MCP server. See [Connectors](#connectors).
+- **Developer integrations:** Configure [Developer MCP](https://www.airwallex.com/docs/developer-tools/ai/developer-connector) separately when needed; `airwallex-ai-provider-card-mit` requires it. Test generated code with sandbox credentials.
 
 ## Important Notice
 
