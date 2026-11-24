@@ -19,7 +19,7 @@ Detect the user's language. Code and API terms stay in English; comments and exp
 
 ## Reference
 
-1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration) for backend setup (auth, Customer, PaymentIntent incl. amount format, saved methods), MIT/CIT flows, and the Split Card element option shapes
+1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md) for backend setup (auth, Customer, PaymentIntent incl. amount format, saved methods), MIT/CIT flows, and the Split Card element option shapes
 2. Read [references/scenarios.md](references/scenarios.md) for scenario overview, then [references/frontend-implementation.md](references/frontend-implementation.md) for Split Card-specific frontend implementation
 3. See [Test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers) if user needs test data
 4. Read [references/styling.md](references/styling.md) if user needs custom styling

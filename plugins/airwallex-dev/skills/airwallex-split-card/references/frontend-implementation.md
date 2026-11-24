@@ -34,7 +34,7 @@ await init({
 > like JPY and KRW have no minor unit, so send the whole number as-is (`1000` for ¥1000).
 > Work the amount out from your server-side order data, not from whatever the browser
 > sends. The backend side is covered in
-> [Payments integration notes](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration).
+> [Payments integration notes](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md).
 >
 > ```javascript
 > // Send the amount in major units, e.g. $49.99:

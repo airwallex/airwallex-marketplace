@@ -21,7 +21,7 @@ Detect the user's language. Code and API terms stay in English; comments and exp
 
 ## Reference
 
-1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration) for backend setup (auth, Customer, PaymentIntent, amount format, saved methods) and for MIT/CIT flows
+1. Fetch [Payments integration notes for AI agents](https://www.airwallex.com/docs/developer-tools/ai-agent-payments-integration.md) for backend setup (auth, Customer, PaymentIntent, amount format, saved methods) and for MIT/CIT flows
 2. Read [references/scenarios.md](references/scenarios.md) for HPP overview, frontend implementation, and the guest/save-card/MIT scenarios
 3. Read [references/styling.md](references/styling.md) for appearance, layout, saved-card display options, and doc references
 4. Read the [test card numbers](https://www.airwallex.com/docs/payments/test-and-go-live/test-card-numbers) doc if user needs test data
