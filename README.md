@@ -78,8 +78,6 @@ This installs the agent skills only and does **not** configure an Airwallex MCP 
 
 ---
 
-> **Upgrading from 0.1.x?** Install `airwallex-agentos` to get the renamed plugin. The old `airwallex` entry becomes a tombstone with no skills or MCP servers — uninstalling it is recommended cleanup but not a prerequisite. Update any skill invocations from `/airwallex:…` to `/airwallex-agentos:…`.
-
 After installing, make sure you have at least one of the prerequisite toolchains available (the `airwallex` CLI or an Airwallex MCP server). See [Connectors](#connectors) above.
 
 ## Important Notice
